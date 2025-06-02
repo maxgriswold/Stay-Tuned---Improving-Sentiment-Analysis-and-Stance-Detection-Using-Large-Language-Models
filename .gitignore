@@ -25,4 +25,4 @@
 *.xml
 *.gz
 *.out
-./data/*
+*.svg
