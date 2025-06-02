@@ -12,7 +12,6 @@
 *.jsonl
 *.docx
 *.tar
-models/llama_finetuned_11_26/llama_3_2_3b_tuned_nominate_biden.zip
 *.zip
 *.tiff
 *.tex
@@ -26,3 +25,4 @@ models/llama_finetuned_11_26/llama_3_2_3b_tuned_nominate_biden.zip
 *.xml
 *.gz
 *.out
+./data/*

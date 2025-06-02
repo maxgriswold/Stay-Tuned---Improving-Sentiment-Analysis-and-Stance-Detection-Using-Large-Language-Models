@@ -20,15 +20,25 @@ args <- commandArgs(trailingOnly = T)
 # launch multiple instances to get tuned model results. Otherwise,
 # use sequential requests to a given API.
 
-if (length(args) > 0){
+if (length(args) > 1){
   tune <- T
   specific_model  <- args[1]
   specific_subject <- args[2]
+  print("Running tuned GPT models")
 }else{
+  print("Running pretrained GPT models")
+  specific_model <- args[1]
   tune <- F
 }
 
-run_date <- "11_21_24"
+run_date <- format(Sys.Date(), "%d_%m_%y")
+
+# If recovery == F, get initial set of results. recovery == T attempts to check each file
+# to see if any estimates were lost due to hitting internal API rate limits or timeouts, 
+# adding these results to existing files. See log files to determine if recovery might be 
+# needed.
+
+recovery <- F
 
 # Load datasets
 df_pol  <- fread("./data/pol_tweets_processed.csv")
@@ -73,7 +83,7 @@ prompt_1 <- "Provide a continuous-value score between [-1, 1] that determines te
 prompt_2 <- "Provide a continuous-value score between [-1, 1] that determines the text's sentiment directed towards {person}. Put the response in the following format, replacing the curly brackets with the score value. Score:{score}"          
 prompt_3 <- "Provide a continuous-value score between [-1, 1] that determines whether the author of the author of the text likes or dislikes {person}, with -1 indicating greatest possible dislike and 1 indicating greatest possible like. Put the response in the following format, replacing the curly brackets with the score value. Score:{score}"
 
-# Prompt 4 was adapted to 4a for tuning models. When model is tuned, used 4a instead of 4.
+# Prompt 4 was adapted  for tuning models. When model is tuned, used 4a instead of 4.
 
 if (tune){
   prompt_4 <- "Provide a score between [-1, 1] that determines whether the author of the text likes or dislikes {person}, with -1 indicating the greatest dislike and 1 indicating the greatest like. Put the response in the following format, replacing the curly brackets with the score value. Score:{score}"
@@ -99,21 +109,20 @@ analysis_models <- setDT(expand.grid("llm_mod" = c(llm_pre, llm_tune),
                                      "prompt_name" = names(prompt_list),
                                      "df_name" = names(analysis_datasets)))
 
-# If in tuning mode, run a specified model only across the 4 datasets. Otherwise,
-# run all models for 3.5 or 4/4o (which share an API deployment)
+# Since models are tuned separately by subject, we need to run tuned version by model/subject,
+# while pretrained models can run for both subjects.
 if (tune == T){
   analysis_models <- analysis_models[llm_mod == specific_model & subject_name == specific_subject & prompt_name == "p4",]
 }else{
-  analysis_models <- analysis_models[llm_mod %in% llm_pre,]
+  analysis_models <- analysis_models[llm_mod == specific_model,]
 }
 
-# Run specific missing models:
-analysis_models <- analysis_models[llm_mod == "gpt35"][c(3:6, 13, 14, 38)]
-
-# Merge on information on dataset sizes to get a sense of how many independent API requests we will need to make:
+# Crete information on dataset sizes to set how many independent 
+# API requests we will need to make:
 data_size <- expand.grid("subject_name" = subjects,
                          "df_name" = names(analysis_datasets))
 
+# Below is prespecified based on the number of rows in each dataset filtered by subject
 data_size$n <- c(14934, 5508, 376, 377, 6362, 5806, 1250, 1250)
 
 analysis_models <- join(analysis_models, data_size, type = "left")
@@ -255,7 +264,7 @@ query_api <- function(tweet_id, dd, df_name, prompt_name,
   
   # Prompts 1-4 use a similar format.
   # For prompt 5, we need to randomize the few-shots,
-  # following Zhao, 2021 suggestions. 
+  # following Zhao, 2024 suggestions.. 
   # For prompt 6, we need to have a series of messages with
   # GPT to enable chain-of-though, as per Zhang, 2024
 
@@ -281,12 +290,14 @@ query_api <- function(tweet_id, dd, df_name, prompt_name,
   
   if (prompt_name == "p5"){
     
-    # # For politician dataset, use nominate score as example:
-    # if (subject_name == "biden" & df_name == "pol"){
-    #   dd[, score := nominate_dim1*-1]
-    # }else if (subject_name == "trump" & df_name == "pol"){
-    #   dd[, score := nominate_dim1]
-    # }
+    # For politician dataset, use nominate as score for example:
+    # Make sure to reverse code the index, if subject is biden,
+    # so that liberals are coded as positive and repubs as negative.
+    if (subject_name == "biden" & df_name == "pol"){
+      dd[, score := nominate_dim1*-1]
+    }else if (subject_name == "trump" & df_name == "pol"){
+      dd[, score := nominate_dim1]
+    }
     
     # Few-shot prompt, following Brown et al., 2020, Li and Conrad, 2024, and Zhao et al., 2021
     # Based on Zhao et al., 2021, it is best if we randomize the ordering
@@ -420,11 +431,152 @@ timeout_wrapper <- function(func, args = list(), timeout = 180){
 
 }
 
-# Run the models
-for (i in 1:dim(analysis_models)[1]){
-  run_llm_analysis(analysis_models[i]$llm_mod, 
-                   analysis_models[i]$subject_name,
-                   analysis_models[i]$prompt_name,
-                   analysis_models[i]$df_name)
+recover_results <- function(llm_mod, subject_name, prompt_name, df_name){
+
+  # Load existing estimate file and compare results against the underlying
+  # text data. Determine which row ids are missing due to hitting request limits
+  # or timeout:
+
+  dd <- analysis_datasets[[df_name]]
+  dd <- dd[subject == subject_name,]
+  
+  filename <- sprintf("./%s/%s_%s_%s_%s.csv", run_date, llm_mod, df_name, prompt_name, subject_name)
+  dd_est <- fread(filename)
+
+  # Ensure column names were set (some files were missing colnames):
+  setnames(dd_est, names(dd_est), c("id", "sentiment_tweet"))
+
+  # Ensure we didn't add any duplicates into a file:
+  dd_est <- unique(dd_est)
+  dd_est <- dd_est[, .SD[1], by = "id"]
+
+  # Also try getting estimates for rows that were NA due to responses
+  # from GPT that did not align with expected pattern:
+  dd_est <- dd_est[!is.na(sentiment_tweet)]
+
+  est_id <- dd_est$id
+  missing_id <- dd[!(id %in% est_id)]$id
+
+  if (length(missing_id) > 0){
+    if (prompt_name == "p6"){
+      # For this prompt, GPT sometimes produces a ton of extra text.
+      # and we need to run 3 prompts in succession.
+      # So, run in even smaller batches to ensure we don't hit the token limit
+      batch_size <- 199/3
+
+      # Specify number of parallel jobs
+      core_num <- 16
+      
+    }else{
+      batch_size <- 200
+      core_num <- 16
+    }
+
+    # For tuned models, need lower RPM 
+    if (tune){
+      batch_size <- 150
+      core_num <- 4
+    }
+
+    batches <- c(seq(1, length(missing_id), batch_size), length(missing_id))
+    print(sprintf("Recovering estimates for model %s %s %s %s", llm_mod, df_name, prompt_name, subject_name))
+    print(sprintf("Model was missing %s estimates", length(missing_id)))
+
+    for (i in 1:(length(batches) - 1)){
+
+      begin_time <- Sys.time()
+
+      print(sprintf("Starting batch %s of %s", i, length(batches) - 1))
+      
+      segment <- missing_id[batches[i]:batches[i + 1]]
+      
+      # Providing a little extra time for recovery requests and ommitting the progress bar:
+      completion <- mclapply(segment, function(x) timeout_wrapper(query_api, list(tweet_id = x, dd = dd, 
+                            df_name = df_name, prompt_name = prompt_name, 
+                            llm_mod = llm_mod, subject_name = subject_name), timeout = 180), 
+                            mc.cores = core_num)
+
+      missing_results <- which(!sapply(completion, is.data.frame))
+      if (length(missing_results) > 0){
+        completion <- completion[-missing_results]
+      }
+
+      if (length(completion) == length(segment)){
+        print("All estimates recovered in missing batch!")
+        completion <- rbindlist(completion)
+        dd_est <- rbindlist(list(dd_est, completion))                   
+      }else if (length(completion) > 0){
+        print(sprintf("Recovered %s of %s in missing batch", length(completion), length(segment)))
+      }else{
+        print(sprintf("Did not recover %s missing batch", length(segment)))
+      }
+
+      #Check timing: nudge to one minute and five seconds to be safe:
+      time_diff <- as.numeric(65, units = "secs") - as.numeric(Sys.time() - begin_time, units = "secs")
+      if (time_diff > 0 & time_diff < 65){
+        Sys.sleep(time_diff)
+      }
+    }
+
+    # Save updated file:
+    old <- length(missing_id)
+
+    new_ids <- dd_est$id
+    still_missing <- dd[!(id %in% new_ids)]$id
+    new <- old - length(still_missing)
+
+    # Ensure we didn't add any duplicates into a file:
+    dd_est <- unique(dd_est)
+    dd_est <- dd_est[, .SD[1], by = "id"]
+
+    print(sprintf("Saving. Added %s of %s estimates missing from results", new, old))
+
+    filename <- sprintf("./%s/recovery/%s_%s_%s_%s.csv", run_date, llm_mod, df_name, prompt_name, subject_name)
+    write.table(dd_est, file = filename, sep = ",", row.names = F)
+
+  }else{
+
+    print(sprintf("No missing estimates!"))
+  
+    filename <- sprintf("./%s/recovery/%s_%s_%s_%s.csv", run_date, llm_mod, df_name, prompt_name, subject_name)
+    write.table(dd_est, file = filename, sep = ",", row.names = F)
+
+  }
+
+  # In addition to log file, save dataset detailing N by model to review when validation finishes:
+  df_recovery <- data.table("llm_mod" = llm_mod, "df_name" = df_name, "prompt_name" = prompt_name,
+                            "subject_name" = subject_name, "n_ests" = dim(dd_est)[1], "n_data" = dim(dd)[1])
+
+  filename_recovery <- sprintf("./%s/estimate_recovery_tracking.csv", run_date)
+
+  if (!file.exists(filename_recovery)){
+    write.table(df_recovery, filename_recovery, sep = ",", row.names = F)
+  }else{
+    write.table(df_recovery, filename_recovery, sep = ",", append = T, row.names = F, col.names = F)
+  }
+
+  return()
+
 }
+
+# Run models sequentially (given rate limits; otherwise I would suggest parallelizing runs)
+
+# Run the models
+if (recovery == F){
+  for (i in 1:dim(analysis_models)[1]){
+    run_llm_analysis(analysis_models[i]$llm_mod, 
+                    analysis_models[i]$subject_name,
+                    analysis_models[i]$prompt_name,
+                    analysis_models[i]$df_name)
+  }
+}else{
+  for (i in 1:dim(analysis_models)[1]){
+    recover_results(analysis_models[i]$llm_mod, 
+                      analysis_models[i]$subject_name,
+                      analysis_models[i]$prompt_name,
+                      analysis_models[i]$df_name)
+  }
+  print("Finished all models")
+}
+
   

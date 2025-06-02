@@ -5,6 +5,7 @@
 rm(list = ls())
 
 library(ggplot2)
+library(irr)
 
 # Extensions to ggplot for various bespoke needs
 library(ggridges)  # For geom_ridges
@@ -298,7 +299,7 @@ plot_dist <- function(d_name, dd, include_tuned = F){
                 plot.title = element_text(hjust = 0),
                 strip.text = element_text(size = 12, family = 'sans'),
                 strip.text.y.left = element_text(angle = 0, hjust = 0, margin = margin(r = 10)), 
-                axis.text.y = element_text(hjust = 0),
+                axis.text.y = element_text(hjust = 1),
                 strip.placement = 'outside',
                 panel.spacing = unit(1, "lines"),
                 plot.subtitle = element_text(hjust = 0),
@@ -362,7 +363,7 @@ plot_dist <- function(d_name, dd, include_tuned = F){
 #        height = 8.27)
 
 # For main paper, only plot results for selected samples:
-select_models   <- c("gpt4o", "gpt35", "deberta", "siebert", "vader", "nrc")
+select_models   <- c("gpt4o", "gpt35", "deberta", "siebert")
 select_prompts   <- c("p3", NA)
 select_tune_data <- c("nominate", "handcode")
 
@@ -458,6 +459,59 @@ dist_select[[4]]
 dev.off()
 
 
+###########################
+# Inter-rater reliability #
+###########################
+
+pol_scored <- fread("./data/raw/pol_tweets_scored.csv")[, .(text, subject_name, scorer_1, scorer_2)]
+setnames(pol_scored, "subject_name", "subject")
+
+# Get the two sets of users scores: validation and train sets:
+user_val   <- fread("./data/raw/user_tweets.csv")[, .(text, person, scorer_1, scorer_2)]
+setnames(user_val, "person", "subject")
+
+user_train <- fread("./data/raw/user_handcode_train.csv")[, .(text, subject, scorer_1, scorer_2)]
+
+df_combine <- rbindlist(list(pol_scored, user_train, user_val))
+
+df_combine[, subject := ifelse(subject == "biden", "Biden", "Trump")]
+
+rater_scatter <- ggplot(df_combine, aes(x = scorer_1, y = scorer_2)) +
+                geom_abline(alpha = 1, linetype = 21, intercept = 0, slope = 1) +
+                geom_smooth(method = 'lm', alpha = 0.5) +
+                geom_point(alpha = 0.2) +
+                facet_wrap(~subject, nrow = 2) +
+                lims(x = c(-1, 1), y = c(-1, 1)) +
+                theme_bw() +
+                labs(x = "Annotator 1", 
+                     y = "Annotator 2") +
+                theme(strip.background = element_blank(),
+                      legend.position = "bottom",
+                      axis.title.y = element_text(angle = 0, vjust = 0.9),
+                      plot.title = element_text(hjust = 0),
+                      strip.text = element_text(size = 12, family = 'sans'),
+                      strip.placement = 'outside',
+                      panel.spacing = unit(1, "lines"),
+                      plot.subtitle = element_text(hjust = 0),
+                      axis.title = element_text(size = 12, family = "sans"))
+
+ggsave("./figs/Fig S. Handcode Compare.pdf", rater_scatter,
+       device = 'pdf', bg = "transparent",
+       height = 8.27, width = 8.27, unit = 'in')
+
+# Calculate overall ICC
+icc(as.matrix(df_combine[, .(scorer_1, scorer_2)]), model = "oneway", unit = "single", type = "consistency")
+
+# Convert to binary scores and calculate Cohen's Kappa:
+df_combine[, scorer_1 := ifelse(scorer_1 > 0, 1, 0)]
+df_combine[, scorer_2 := ifelse(scorer_2 > 0, 1, 0)]
+
+kappa2(as.matrix(df_combine[, .(scorer_1, scorer_2)]), weight = "equal")
+
+# Produce contingency table:
+table(df_combine[subject == "Biden"]$scorer_1, df_combine[subject == "Biden"]$scorer_2)
+table(df_combine[subject == "Trump"]$scorer_1, df_combine[subject == "Trump"]$scorer_2)
+
 ###########################################
 # Scatterplots: ID, Nominate, Human-Coded #
 ###########################################
@@ -510,7 +564,6 @@ ggsave("./figs/Fig S. Coded scores v. Nominate scores.pdf", nom_v_score,
 cairo_ps("./figs/Fig S. Coded scores v. Nominate scores.eps", height = 8.27, width = 11.69)
 nom_v_score
 dev.off()
-
 
 # Scatters indicate that within each part, nominate scores are providing
 # very little information about respective tweet codes (slopes are basically 0)
@@ -697,7 +750,7 @@ df_cat    <- do.call(rbind, lapply(df_summary, function(x) rbindlist(x[grep("Cat
 # Fig 2. Mean scores by party and correlation, pol data #
 #########################################################
 
-keep_models <- c("gpt4o", "gpt35", "deberta", "siebert", "vader", "nrc")
+keep_models <- c("gpt4o", "gpt35", "deberta", "siebert")
 
 # For Fig 2, calculate mean estimated score for each model in the politican dataset:
 df_fig2 <- df[data_name == 'pol', .(est_score, model_id, id)]
@@ -782,7 +835,7 @@ dev.off()
 # Fig 3. Correlation, user data, single or both subjects #
 ##########################################################
 
-keep_models <- c("gpt4o", "gpt35", "deberta", "siebert", "vader", "nrc")
+keep_models <- c("gpt4o", "gpt35", "deberta", "siebert")
 
 df_fig3 <- df_cont[model_name %in% keep_models & tuned == F & prompt_name %in% c(NA, "p3") & data_name == 'user']
 
@@ -806,7 +859,7 @@ fig_3 <- ggplot(df_fig3, aes(y = model_name_long)) +
                x = "Correlation",
                color = "Number of subjects mentioned") +
           theme_bw() +
-          coord_fixed(ratio = 0.5, xlim = c(-0.5, 1), ylim = c(1, 6)) +
+          coord_fixed(ratio = 0.5, xlim = c(-0.5, 1), ylim = c(1, 4)) +
           scale_x_continuous(breaks = seq(-0.5, 1, 0.5)) +
           scale_color_manual(values = plot_colors) +
           facet_wrap(~subject) +
@@ -1537,7 +1590,7 @@ gen_tables <- function(variable_type, d_name, set){
   
   if (d_name == "Twitter Users"){
     keep <- c(keep, "sub_pop")
-    keep_rename <- c(keep_rename, "# Targets")
+    keep_rename <- c(keep_rename, "\\# Targets")
     
     df_table <- df_table[sub_pop != "all"]
     df_table[, sub_pop := ifelse(sub_pop == "one", "Single", "Multiple")]

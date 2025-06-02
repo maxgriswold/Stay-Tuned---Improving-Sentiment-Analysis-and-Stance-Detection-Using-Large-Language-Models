@@ -1,11 +1,9 @@
-# Process external datasets for validating models:
-# Max Griswold
-# 11/20/2024
+# Process external datasets for modeling pipeline
 
 library(data.table)
 library(plyr)
 
-setwd("C:/users/griswold/documents/GitHub/twitter-representative-pop/public_facing/data/")
+setwd("./data/")
 
 li_train_trump <- fread("./raw/li_2021/raw_train_trump.csv")
 li_train_biden <- fread("./raw/li_2021/raw_train_biden.csv")
@@ -39,3 +37,4 @@ setnames(df_kaw, names(df_kaw), c("text", "score", "subject"))
 df_kaw[, id := .I]
 
 write.csv(df_kaw, "./processed/kawintiranon_tweets_processed.csv", row.names = F)
+

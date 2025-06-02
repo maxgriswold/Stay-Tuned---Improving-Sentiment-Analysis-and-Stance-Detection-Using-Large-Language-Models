@@ -1,6 +1,4 @@
-# Test out sentiment scoring in R
-# Max Griswold
-# 9/20/22
+# Estimate dictionary-based sentiment scores
 
 rm(list = ls())
 
@@ -14,10 +12,9 @@ library(vader)
 library(data.table)
 library(plyr)
 library(dplyr)
-library(ggplot2)
 library(stringi)
 
-setwd("C:/users/griswold/documents/GitHub/twitter-representative-pop/public_facing/data/")
+setwd("./data/")
 
 df_li   <- fread("./processed/li_tweets_processed.csv")
 df_kaw  <- fread("./processed/kawintiranon_tweets_processed.csv")
@@ -52,8 +49,6 @@ run_lex_model <- function(lexname, df){
                      adversative.weight = 0)
   
   # Collapse sentiment scores back to tweet-level:
-  
-  # Remove meaningless phrases (I checked - these were all punctuation or digits)
   score <- score[!is.na(word_count),]
   
   score[, (lexname) := weighted.mean(.SD$sentiment, w = .SD$word_count), by = "element_id"]
@@ -75,6 +70,7 @@ run_lexical_pipeline <- function(df_name){
   res  <- Reduce(function(x, y) merge(x, y, by = c("id", "element_id")), 
                  lapply(names(dicts), run_lex_model, df = dd))
   
+  # Pull out VADER scores and set manually within results dataframe
   res_vader <- vader_df(dd$text)
   res_vader <- res_vader$compound
   

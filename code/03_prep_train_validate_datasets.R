@@ -1,5 +1,4 @@
 # Prep training datasets for LLMs
-# Max Griswold
 
 rm(list = ls())
 
@@ -11,21 +10,19 @@ library(data.table)
 library(plyr)
 library(dplyr)
 
-setwd("C:/users/griswold/documents/GitHub/twitter-representative-pop/")
-
-df_pol  <- fread("./public_facing/data/processed/pol_tweets_processed.csv")
-df_user <- fread("./public_facing/data/processed/handcode_tweets_processed.csv")
+df_pol  <- fread("./data/processed/pol_tweets_processed.csv")
+df_user <- fread("./data/processed/handcode_tweets_processed.csv")
 
 prep_train_data <- function(dataset, subject_name, formatting = 'llama'){
   
-  # For pol-based datasets, set score based off datset name and subset data
-  # to training rows. Otherwise, used the prepared hand-coded validation
-  # dataset from the user database
+  # For pol-based datasets, set score based off dataset name (e.g., if Biden, dem +1, rep -1) 
+  # and subset data to prespecified training rows (a randomly selected fold)
+  # Otherwise, use the prepared hand-coded validation dataset from the user database.
   
-  # write.csv(df_train , sprintf("./public_facing/data/interim/training_key_%s_user.csv", subject_name))
+  # write.csv(df_train , sprintf("./data/interim/training_key_%s_user.csv", subject_name))
   if (dataset != "handcode"){
     
-    df_train <- fread(sprintf("./public_facing/data/interim/training_key_%s.csv", subject_name))
+    df_train <- fread(sprintf("./data/interim/training_key_%s.csv", subject_name))
     dd <- df_pol[id %in% df_train[train == T,]$id,]
     
     if (subject_name == "biden" & dataset == "party_id"){
@@ -43,20 +40,23 @@ prep_train_data <- function(dataset, subject_name, formatting = 'llama'){
       dd[, score := nominate_dim1]
     }
   }else{
-    df_train <- fread(sprintf("./public_facing/data/interim/training_key_%s_handcode.csv", subject_name))
+    df_train <- fread(sprintf("./data/interim/training_key_%s_handcode.csv", subject_name))
     dd <- df_user[id %in% df_train[train == T,]$id,]
   }
   
   train_json <- create_json(dd, dataset, subject_name, formatting)
   
+  # Keeping in case this is useful for other researchers who may wish
+  # to train LLama models in the future
+  
   if (formatting == 'llama'){
     train_json <- toJSON(train_json, pretty = T, auto_unbox = T)
     
-    output_file <- sprintf("./public_facing/data/training/llm_finetune_llama_%s_%s.json", dataset, subject_name)
+    output_file <- sprintf("./data/training/llm_finetune_llama_%s_%s.json", dataset, subject_name)
     
     write(train_json, output_file)
   }else{
-    output_file <- sprintf("./public_facing/data/training/llm_finetune_openai_%s_%s.jsonl", dataset, subject_name)
+    output_file <- sprintf("./data/training/llm_finetune_openai_%s_%s.jsonl", dataset, subject_name)
     writeLines(
       sapply(train_json, function(x) toJSON(x, auto_unbox = TRUE)),
       con = output_file
@@ -94,7 +94,7 @@ create_json <- function(dd, dataset, subject_name, formatting = 'llama' ){
 
 dataset_names <- c("party_id", "nominate", "handcode")
 subject_names <- c("biden", "trump")
-format_names    <- c("openai", "llama")
+format_names    <- c("openai")
 
 for (d in dataset_names){
   for (s in subject_names){
