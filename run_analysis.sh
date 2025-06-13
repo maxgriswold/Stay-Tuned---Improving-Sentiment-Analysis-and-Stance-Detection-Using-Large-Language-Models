@@ -21,6 +21,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Change to the script directory to run all commands
+cd "$SCRIPT_DIR"
+
 # Create log directory if it doesn't exist
 mkdir -p log
 
@@ -66,15 +72,15 @@ echo "Run GPT models: $(if [ "$RUN_GPT" = false ]; then echo "NO"; else echo "YE
 echo "========================================"
 
 # Run files in sequence
-run_command "Rscript /code/00_get_analysis_data.R" "Step 00: Get analysis data from Harvard Dataverse" "log/00_get_analysis_data.log"
+run_command "Rscript code/00_get_analysis_data.R" "Step 00: Get analysis data from Harvard Dataverse" "log/00_get_analysis_data.log"
 
-run_command "Rscript /code/01_prep_analysis_data.R" "Step 01: Prep Twitter data collected by study Team" "log/01_prep_analysis_data.log"
+run_command "Rscript code/01_prep_analysis_data.R" "Step 01: Prep Twitter data collected by study Team" "log/01_prep_analysis_data.log"
 
-run_command "Rscript /code/02_process_external_datasets.R" "Step 02: Prep Twitter Data from External Studies" "log/02_process_external_datasets.log"
+run_command "Rscript code/02_process_external_datasets.R" "Step 02: Prep Twitter Data from External Studies" "log/02_process_external_datasets.log"
 
-run_command "Rscript /code/03_prep_train_validate_datasets.R" "Step 03: Prepare Training and Validation datasets" "log/03_prep_train_validate_datasets.log"
+run_command "Rscript code/03_prep_train_validate_datasets.R" "Step 03: Prepare Training and Validation datasets" "log/03_prep_train_validate_datasets.log"
 
-run_command "Rscript /code/04_lexical_methods.R" "Step 04: Run all lexical methods" "log/04_lexical_methods.log"
+run_command "Rscript code/04_lexical_methods.R" "Step 04: Run all lexical methods" "log/04_lexical_methods.log"
 
 # The Supervised Language Models require using a GPU. Many GPUs run out of memory over multiple model runs and CUDA makes it difficult
 # to free up memory. So, the code below runs through models separately by training dataset while reseting the kernel. If a GPU is 
@@ -88,20 +94,20 @@ for i in "${!training_sets[@]}"; do
 	
 	# Convert 0,1,2 to a,b,c
     step_letter=$(printf "%c" $((97 + i)))  
-    run_command "python /code/05_pretrained_transformer_methods.py $training_set" "Step 05$step_letter: Supervised language models ($training_set)" "log/05_pretrained_transformer_methods_$training_set.log"
+    run_command "python code/05_pretrained_transformer_methods.py $training_set" "Step 05$step_letter: Supervised language models ($training_set)" "log/05_pretrained_transformer_methods_$training_set.log"
 done
 
 # Only run GPT methods if desired by the user.
 if [ "$RUN_GPT" = true ]; then
-    run_command "bash /code/06_submit_tuned_gpt.sh" "Step 06: Run GPT models"
+    run_command "bash code/06_submit_tuned_gpt.sh" "Step 06: Run GPT models"
 else
     echo "Step 06: Skipping code for GPT models and using estimates from Harvard Dataverse. Use --run-gpt to replicate these models but make sure to provide API keys first!"
     echo ""
 fi
 
-run_command "Rscript /code/07_combine_results.R" "Step 07: Combine all estimates into results tables" "log/07_combine_results.log"
+run_command "Rscript code/07_combine_results.R" "Step 07: Combine all estimates into results tables" "log/07_combine_results.log"
 
-run_command "Rscript /code/08_evaluate_results.R" "Step 08: Analyze and visualize results" "log/08_evaluate_results.log"
+run_command "Rscript code/08_evaluate_results.R" "Step 08: Analyze and visualize results" "log/08_evaluate_results.log"
 
 echo "========================================"
 echo "✓ Analysis pipeline completed successfully!"
