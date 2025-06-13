@@ -92,6 +92,10 @@ ENV PATH="/opt/conda/envs/twitter_train/bin:$PATH"
 # Create working directory
 WORKDIR /workspace
 
+# Clone the GitHub repository into the workspace
+RUN git clone https://github.com/maxgriswold/Stay-Tuned---Improving-Sentiment-Analysis-and-Stance-Detection-Using-Large-Language-Models.git stay-tuned && \
+    echo "Stay-Tuned repository cloned successfully"
+
 # Set default shell to bash
 SHELL ["/bin/bash", "-c"]
 
