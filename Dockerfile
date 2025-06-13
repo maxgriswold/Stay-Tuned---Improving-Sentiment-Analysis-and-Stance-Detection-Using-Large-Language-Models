@@ -70,19 +70,10 @@ RUN conda init bash
 RUN conda update -n base -c conda-forge conda -y
 
 # Create conda environment with specified packages
-RUN conda create --name twitter_train python=3.11 pytorch pytorch-cuda=12.1 cudatoolkit numpy pandas scikit-learn scipy transformers notebook jupyter ipywidgets -c pytorch -c nvidia -y
+RUN conda create --name twitter_train python=3.11 pytorch=2.6.0 pytorch-cuda=12.1 xformers cudatoolkit numpy pandas scikit-learn scipy transformers notebook jupyter ipywidgets -c conda-forge -c pytorch -c xformers -c nvidia -y
 
 # Activate environment and install additional packages
 SHELL ["conda", "run", "-n", "twitter_train", "/bin/bash", "-c"]
-
-# Install pip packages first
-RUN pip install --no-cache-dir --no-deps --no-input git+https://github.com/unslothai/unsloth.git && \
-    pip install --no-deps --no-input "trl<0.9.0" peft accelerate bitsandbytes && \
-    pip install --no-input unsloth-zoo && \
-    pip install --no-input gdown
-
-# Install xformers
-RUN conda install xformers -c xformers -y
 
 # Set up environment variables
 ENV CONDA_DEFAULT_ENV=twitter_train
@@ -95,6 +86,8 @@ WORKDIR /workspace
 # Clone the GitHub repository into the workspace
 RUN git clone https://github.com/maxgriswold/Stay-Tuned---Improving-Sentiment-Analysis-and-Stance-Detection-Using-Large-Language-Models.git stay-tuned && \
     echo "Stay-Tuned repository cloned successfully"
+	
+RUN chmod u+x /workspace/stay-tuned/run_analysis.sh
 
 # Set default shell to bash
 SHELL ["/bin/bash", "-c"]

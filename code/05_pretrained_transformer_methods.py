@@ -103,7 +103,7 @@ def zero_model (model_name, subj, dd_name):
         hypothesis_template = hypothesis_template + "{}"
         classes = ['negative', 'positive']
         
-        pipe = pipeline('zero-shot-classification', model = model_name, top_k = None, function_to_apply = 'softmax', device = 0)
+        pipe = pipeline('zero-shot-classification', model = models[model_name], top_k = None, function_to_apply = 'softmax', device = 0)
         scores = pipe(list(dd.text), classes, hypothesis_template = hypothesis_template, multi_label = False)
 
         # The below code looks a little odd but here's the idea:
