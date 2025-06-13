@@ -19,10 +19,9 @@ prep_train_data <- function(dataset, subject_name, formatting = 'llama'){
   # and subset data to prespecified training rows (a randomly selected fold)
   # Otherwise, use the prepared hand-coded validation dataset from the user database.
   
-  # write.csv(df_train , sprintf("./data/interim/training_key_%s_user.csv", subject_name))
   if (dataset != "handcode"){
     
-    df_train <- fread(sprintf("./data/interim/training_key_%s.csv", subject_name))
+    df_train <- fread(sprintf("./data/raw/supplement/training_key_%s.csv", subject_name))
     dd <- df_pol[id %in% df_train[train == T,]$id,]
     
     if (subject_name == "biden" & dataset == "party_id"){
@@ -34,20 +33,22 @@ prep_train_data <- function(dataset, subject_name, formatting = 'llama'){
     # Reverse code first-dimension of nominate to correspond to view towards
     # specific party. So democrats have a "positive" nominate score for Biden and
     # "negative" nominate score for Trump
+    
     if (subject_name == "biden" & dataset == "nominate"){
       dd[, score := nominate_dim1*-1]
     }else if (subject_name == "trump" & dataset == "nominate"){
       dd[, score := nominate_dim1]
     }
   }else{
-    df_train <- fread(sprintf("./data/interim/training_key_%s_handcode.csv", subject_name))
+    df_train <- fread(sprintf("./data/raw/supplement/training_key_%s_handcode.csv", subject_name))
     dd <- df_user[id %in% df_train[train == T,]$id,]
   }
   
   train_json <- create_json(dd, dataset, subject_name, formatting)
   
   # Keeping in case this is useful for other researchers who may wish
-  # to train LLama models in the future
+  # to train LLama models in the future. Prepares training data in a LLAMA
+  # format.
   
   if (formatting == 'llama'){
     train_json <- toJSON(train_json, pretty = T, auto_unbox = T)

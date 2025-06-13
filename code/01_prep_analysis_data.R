@@ -1,8 +1,6 @@
-# Prep analysis dataset for analysis pipeline
+# Prep analysis dataset for the code pipeline
 
 rm(list = ls())
-
-library(mongolite)
 
 library(data.table)
 library(plyr)
@@ -13,10 +11,12 @@ library(lubridate)
 # Code below is kept for posterity; see main paper for details on how
 # we obtained Twitter data. This data had been stored in a MongoDB.
 # Please contact study authors for more details.
-
+#
 # Connect to the Mongo database and pull tweets which contain the word
 # "Biden" between presidential debates:
-
+#
+#library(mongolite)
+#
 # con <- mongo(collection = "politician_tweets_bw", db = "twitter",
 #              url = "mongodb://root:password@twitter-collection-db.rand.cloud",
 #              verbose = F)

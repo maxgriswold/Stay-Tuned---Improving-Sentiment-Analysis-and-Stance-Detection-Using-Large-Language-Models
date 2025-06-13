@@ -14,12 +14,10 @@ library(plyr)
 library(dplyr)
 library(stringi)
 
-setwd("./data/")
-
-df_li   <- fread("./processed/li_tweets_processed.csv")
-df_kaw  <- fread("./processed/kawintiranon_tweets_processed.csv")
-df_pol  <- fread("./processed/pol_tweets_processed.csv")
-df_user <- fread("./processed/user_tweets_processed.csv")
+df_li   <- fread("./data/processed/li_tweets_processed.csv")
+df_kaw  <- fread("./data//processed/kawintiranon_tweets_processed.csv")
+df_pol  <- fread("./data//processed/pol_tweets_processed.csv")
+df_user <- fread("./data//processed/user_tweets_processed.csv")
 
 analysis_datasets <- list("pol" = df_pol, 
                           "user" = df_user,
@@ -84,7 +82,7 @@ run_lexical_pipeline <- function(df_name){
                    measure.vars = c(lexnames, "vader"), variable.name = 'method',
                    value.name = 'sentiment_tweet')
   
-  write.csv(df_score, sprintf("./results/lexical_%s.csv", df_name), row.names = F)
+  write.csv(df_score, sprintf("./data/results/lexical_%s.csv", df_name), row.names = F)
   
 }
 

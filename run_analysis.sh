@@ -1,0 +1,107 @@
+#!/bin/bash
+
+# Analysis Piepline
+# Usage: ./run_analysis.sh [--run-gpt]
+
+RUN_GPT=false
+
+# Parse command line arguments. If there is more than one, check
+# to see if 
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --run-gpt)
+            RUN_GPT=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--run-gpt]"
+            exit 1
+            ;;
+    esac
+done
+
+# Create log directory if it doesn't exist
+mkdir -p log
+
+# Function to run a command and check for errors
+run_command() {
+    local cmd="$1"
+    local description="$2"
+    local log_file="$3"
+    
+    echo "Running: $description"
+    if [ -n "$log_file" ]; then
+        echo "Logging to: $log_file"
+    fi
+    echo "----------------------------------------"
+    
+    if [ -n "$log_file" ]; then
+        # Run with logging
+        if eval "$cmd" > "$log_file" 2>&1; then
+            echo "✓ Completed: $description"
+            echo ""
+        else
+            echo "✗ Failed: $description"
+            echo "Check log file: $log_file"
+            echo "Exiting analysis pipeline due to error."
+            exit 1
+        fi
+    else
+        # Run without logging (for bash scripts)
+        if eval "$cmd"; then
+            echo "✓ Completed: $description"
+            echo ""
+        else
+            echo "✗ Failed: $description"
+            echo "Exiting analysis pipeline due to error."
+            exit 1
+        fi
+    fi
+}
+
+# Start pipeline
+echo "Starting analysis pipeline..."
+echo "Run GPT models: $(if [ "$RUN_GPT" = false ]; then echo "YES"; else echo "NO"; fi)"
+echo "========================================"
+
+# Run files in sequence
+run_command "Rscript 00_get_analysis_data.R" "Step 00: Get analysis data from Harvard Dataverse" "log/00_get_analysis_data.log"
+
+run_command "Rscript 01_prep_analysis_data.R" "Step 01: Prep Twitter data collected by study Team" "log/01_prep_analysis_data.log"
+
+run_command "Rscript 02_process_external_datasets.R" "Step 02: Prep Twitter Data from External Studies" "log/02_process_external_datasets.log"
+
+run_command "Rscript 03_prep_train_validate_datasets.R" "Step 03: Prepare Training and Validation datasets" "log/03_prep_train_validate_datasets.log"
+
+run_command "Rscript 04_lexical_methods.R" "Step 04: Run all lexical methods" "log/04_lexical_methods.log"
+
+# The Supervised Language Models require using a GPU. Many GPUs run out of memory over multiple model runs and CUDA makes it difficult
+# to free up memory. So, the code below runs through models separately by training dataset while reseting the kernel. If a GPU is 
+# sufficiently small, it migth be best to modify the shell script further to run these models by training set and model type.
+
+# Define training sets
+training_sets=('party' 'nominate' 'handcode')
+
+for i in "${!training_sets[@]}"; do
+    training_set="${training_sets[$i]}"
+	
+	# Convert 0,1,2 to a,b,c
+    step_letter=$(printf "%c" $((97 + i)))  
+    run_command "python 05_pretrained_transformer_methods.py $training_set" "Step 05$step_letter: Supervised language models ($training_set)" "log/05_pretrained_transformer_methods_$training_set.log"
+done
+
+# Only run GPT methods if desired by the user.
+if [ "$RUN_GPT" = true ]; then
+    run_command "bash 06_submit_tuned_gpt.sh" "Step 06: Run GPT models"
+else
+    echo "Step 06: Skipping code for GPT models and using estimates from Harvard Dataverse. Use --run-gpt to replicate these models but make sure to provide API keys first!"
+    echo ""
+fi
+
+run_command "Rscript 07_combine_results.R" "Step 07: Combine all estimates into results tables" "log/07_combine_results.log"
+
+run_command "Rscript 08_evaluate_results.R" "Step 08: Analyze and visualize results" "log/08_evaluate_results.log"
+
+echo "========================================"
+echo "✓ Analysis pipeline completed successfully!"
