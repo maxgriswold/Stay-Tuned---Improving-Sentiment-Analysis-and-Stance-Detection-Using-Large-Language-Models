@@ -3,9 +3,7 @@
 library(data.table)
 library(plyr)
 
-setwd("C:/Users/griswold/Documents/github/twitter-representative-pop/public_facing/data")
-
-path  <- "interim/11_21_24"
+path  <- "./data/estimates"
 files <- list.files(path)
 
 # Lexical models

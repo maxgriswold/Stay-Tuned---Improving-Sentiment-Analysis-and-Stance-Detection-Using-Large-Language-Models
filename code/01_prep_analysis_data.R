@@ -47,112 +47,120 @@ library(lubridate)
 # 
 # profiles <- con_prof$find(query = qprof, fields = fprof)
 # 
-# biden$subject <- "biden"
-# trump$subject <- "trump"
-# 
-# df <- rbind(biden, trump)
-# setDT(df)
-# 
-# # Get politician names and add onto tweets:
-# setnames(profiles, names(profiles), c("name", "author_id", "username"))
-# df <- join(df, profiles, by = 'author_id', type = 'left')
-# 
-# df <- df[, .()]
-# write.csv(df, "./public_facing/data/raw/politician_tweets.csv", row.names = F)
-# 
-# df[, date := as.Date(created_at, format = "%Y-%m-%d")]
-# df[, created_at := NULL]
-# 
-# # Remove hyperlinks and html
-# df[, text := gsub("http\\S+", "", text)]
-# df[, text := gsub("/t.co\\S+", "", text)]
-# df[, text := gsub("<.*>", "", text)]
-# df[, text := gsub("[^\x01-\x7F]", "", text)]
-# 
-# # Grab info on pols from VoteView and Twitter username/pol crosswalks:
-# lean <- fread("pol_lean.csv") 
-# 
-# reps <- fread("cw_house_2022.csv")
-# setnames(reps, names(reps), c("first", "last", "username", "loc", "party"))
-# 
-# sens <- fread("cw_senate_2022.csv")
-# setnames(sens, names(sens), c("loc", "party", "first", "last", "username"))
-# 
-# pol_names <- rbind(sens, reps)
-# pol_names[, username := gsub("@", "", username)]
-# 
-# df <- join(df, pol_names, by = "username", type = "left")
-# 
-# # Remove Governors and former governers (confirmed by checking list, hence carve out for Mark Pocan)
-# df <- df[!is.na(last)|name == "Rep. Mark Pocan", ]
-# df[is.na(last), `:=`(first = "Mark", last = "Pocan")]
-# 
-# df[, bioname := paste(first, last)]
-# 
-# # Convert string encoding to ensure accents are included. Set lower to improve fuzzy
-# # match with VoteView
-# df[, bioname := iconv(bioname, from = "latin1", to='ASCII//TRANSLIT')]
-# df[, bioname := tolower(bioname)]
-# 
-# # David Cicilline tweets out of two accounts so make sure tweets on the second account are 
-# # maintained
-# 
-# df[username == "RepCicilline", `:=`(last = "Cicilline", first = "David", bioname = "David Cicilline")]
-# 
-# # See VoteView paper concerning nominate factor: https://link.springer.com/article/10.1007/s11127-018-0546-0
-# # (first factor represents liberal/conservative lean of members)
-# lean <- lean[, .(bioname, nominate_dim1, party_code)]
-# 
-# lean[, party_code := as.character(party_code)]
-# 
-# lean[party_code == "100", party_code := "D"]
-# lean[party_code == "200", party_code := "R"]
-# 
-# lean[bioname %in% c("AMASH, Justin", "MITCHELL, Paul"), party_code := "R"]
-# lean[bioname %in% c("SANDERS, Bernard", "KING, Angus Stanley, Jr."), party_code := "D"]
-# 
-# # Change bioname to be first name/last rather than last/first:
-# lean[, c("last", "first") := tstrsplit(bioname, " ", keep = c(1, 2))]
-# lean[, bioname := paste(first, last)]
-# lean[, bioname := tolower(gsub(",", "", bioname))]
-# 
-# # Changing the encoding a bit, compared to earlier, since accents are being
-# # displayed directly (rather than incorporated as backslash special characters)
-# lean[, bioname := iconv(bioname, to = 'ASCII//TRANSLIT')]
-# 
-# lean <- lean[, .(bioname, party_code, nominate_dim1)]
-# 
-# #Try direct match
-# df <- join(df, lean, by = "bioname", type = "left")
-# 
-# # For stragglers, try using only last names:
-# df_stragglers <- df[is.na(party_code)]
-# df_stragglers[, last := iconv(last, from = "latin1", to='ASCII//TRANSLIT')]
-# df_stragglers[, last := tolower(last)]
-# 
-# df_stragglers[, `:=`(bioname = NULL, party_code = NULL, nominate_dim1 = NULL)]
-# 
-# lean[, last := tstrsplit(bioname, " ", keep = 2)]
-# 
-# df_stragglers <- join(df_stragglers, lean, by = "last", type = "left")
-# 
-# # For remainder, drop these reps since they are not included in VoteView 
-# # (since they are junior members/senators w/o voting records)
-# # We lose ~3% of observations here (361/11489 tweets)
-# 
-# df <- rbind(df[!is.na(party_code)], df_stragglers[!is.na(party_code)], fill = T)
-# df <- df[, .(id, author_id, bioname, text, subject, date, nominate_dim1, party_code, loc)]
-# 
-# # Additionally, remove empty tweets:
-# df <- df[text != ""]
-# 
-# # Construct new ID column to make sure we maintain the right number
-# # of observations across models
-# df[, id := .I]
-# 
-# df <- df[, .(id, bioname, text, subject, date, nominate_dim1, party_code, loc)]
+# write.csv(biden, "./data/raw/congress_tweets_biden.csv", row.names = F)
+# write.csv(trump, "./data/raw/congress_tweets_trump.csv", row.names = F)
+# write.csv(profiles, "./data/raw/congress_twitter_profiles.csv", row.names = F)
 
-#write.csv(df, "./data/processed/pol_tweets_processed.csv", row.names = F)
+biden <- fread("./data/raw/congress_tweets_biden.csv")
+trump <- fread("./data/raw/congress_tweets_trump.csv")
+profiles <- fread("./data/raw/congress_twitter_profiles.csv")
+
+biden$subject <- "biden"
+trump$subject <- "trump"
+
+df <- rbind(biden, trump)
+setDT(df)
+
+# Get politician names and add onto tweets:
+setnames(profiles, names(profiles), c("name", "author_id", "username"))
+df <- join(df, profiles, by = 'author_id', type = 'left')
+
+df[, date := as.Date(created_at, format = "%Y-%m-%d")]
+df[, created_at := NULL]
+
+# Remove hyperlinks and html
+df[, text := gsub("http\\S+", "", text)]
+df[, text := gsub("/t.co\\S+", "", text)]
+df[, text := gsub("<.*>", "", text)]
+df[, text := gsub("[^\x01-\x7F]", "", text)]
+
+# Grab info on pols from VoteView and Twitter username/pol crosswalks:
+lean <- fread("./data/raw/supplement/pol_lean.csv")
+
+reps <- fread("./data/raw/supplement/cw_house_2022.csv")
+setnames(reps, names(reps), c("first", "last", "username", "loc", "party"))
+
+sens <- fread("./data/raw/supplement/cw_senate_2022.csv")
+setnames(sens, names(sens), c("loc", "party", "first", "last", "username"))
+
+pol_names <- rbind(sens, reps)
+
+# Make sure encoding is correct, which removes unexpected symbols from MongoDB
+pol_names[, username := iconv(username, from = "ISO-8859-1", to = "UTF-8")]
+pol_names[, username := gsub("@", "", username)]
+
+df <- join(df, pol_names, by = "username", type = "left")
+
+# Remove Governors and former governers (confirmed by checking list, hence carve out for Mark Pocan)
+df <- df[!is.na(last)|name == "Rep. Mark Pocan", ]
+df[is.na(last), `:=`(first = "Mark", last = "Pocan")]
+
+df[, bioname := paste(first, last)]
+
+# Convert string encoding to ensure accents are included. Set lower to improve fuzzy
+# match with VoteView
+df[, bioname := iconv(bioname, from = "latin1", to='ASCII//TRANSLIT')]
+df[, bioname := tolower(bioname)]
+
+# David Cicilline tweets out of two accounts so make sure tweets on the second account are
+# maintained
+
+df[username == "RepCicilline", `:=`(last = "Cicilline", first = "David", bioname = "David Cicilline")]
+
+# See VoteView paper concerning nominate factor: https://link.springer.com/article/10.1007/s11127-018-0546-0
+# (first factor represents liberal/conservative lean of members)
+lean <- lean[, .(bioname, nominate_dim1, party_code)]
+
+lean[, party_code := as.character(party_code)]
+
+lean[party_code == "100", party_code := "D"]
+lean[party_code == "200", party_code := "R"]
+
+lean[bioname %in% c("AMASH, Justin", "MITCHELL, Paul"), party_code := "R"]
+lean[bioname %in% c("SANDERS, Bernard", "KING, Angus Stanley, Jr."), party_code := "D"]
+
+# Change bioname to be first name/last rather than last/first:
+lean[, c("last", "first") := tstrsplit(bioname, " ", keep = c(1, 2))]
+lean[, bioname := paste(first, last)]
+lean[, bioname := tolower(gsub(",", "", bioname))]
+
+# Changing the encoding a bit, compared to earlier, since accents are being
+# displayed directly (rather than incorporated as backslash special characters)
+lean[, bioname := iconv(bioname, to = 'ASCII//TRANSLIT')]
+
+lean <- lean[, .(bioname, party_code, nominate_dim1)]
+
+#Try direct match
+df <- join(df, lean, by = "bioname", type = "left")
+
+# For stragglers, try using only last names:
+df_stragglers <- df[is.na(party_code)]
+df_stragglers[, last := iconv(last, from = "latin1", to='ASCII//TRANSLIT')]
+df_stragglers[, last := tolower(last)]
+
+df_stragglers[, `:=`(bioname = NULL, party_code = NULL, nominate_dim1 = NULL)]
+
+lean[, last := tstrsplit(bioname, " ", keep = 2)]
+
+df_stragglers <- join(df_stragglers, lean, by = "last", type = "left")
+
+# For remainder, drop these reps since they are not included in VoteView
+# (since they are junior members/senators w/o voting records)
+# We lose ~3% of observations here (361/11489 tweets)
+
+df <- rbind(df[!is.na(party_code)], df_stragglers[!is.na(party_code)], fill = T)
+df <- df[, .(id, author_id, bioname, text, subject, date, nominate_dim1, party_code, loc)]
+
+# Additionally, remove empty tweets:
+df <- df[text != ""]
+
+# Construct new ID column to make sure we maintain the right number
+# of observations across models
+df[, id := .I]
+
+df <- df[, .(id, bioname, text, subject, date, nominate_dim1, party_code, loc)]
+
+write.csv(df, "./data/processed/pol_tweets_processed.csv", row.names = F)
 
 # Process hand-coded validation tweet dataset to match format of 
 # politican tweets
@@ -242,3 +250,4 @@ df_val[, id := .I]
 
 df_val <- df_val[, .(author_id, id, text, score, subject)]
 write.csv(df_val, "./data/processed/handcode_tweets_processed.csv", row.names = F)
+
