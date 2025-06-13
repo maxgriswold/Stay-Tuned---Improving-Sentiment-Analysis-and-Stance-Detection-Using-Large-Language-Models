@@ -3,7 +3,7 @@
 library(data.table)
 library(plyr)
 
-path  <- "./data/estimates"
+path  <- "./data/results"
 files <- list.files(path)
 
 # Lexical models
