@@ -54,6 +54,7 @@ siebert = "siebert/sentiment-roberta-large-english"
 
 # Ref: https://arxiv.org/abs/2202.03829
 # HF page: https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest
+
 tweet_nlp = 'cardiffnlp/twitter-roberta-base-sentiment-latest'
 
 # Ref: http://arxiv.org/abs/2312.17543
@@ -120,7 +121,7 @@ def zero_model (model_name, subj, dd_name):
         # Use a zero shot classifier to obtain softmax probabilities on each respective class.
         # Then, take the mean of these probabilities as the sentiment score.
         # device = 0 == use the gpu
-        pipe = pipeline(model = model_name, top_k = None, function_to_apply = 'softmax', device = 0)
+        pipe = pipeline(model = models[model_name], top_k = None, function_to_apply = 'softmax', device = 0)
         scores = pipe(list(dd.text))
 
         # Using a slightly different strategy for the other models to sort the outputs correctly since the structure
