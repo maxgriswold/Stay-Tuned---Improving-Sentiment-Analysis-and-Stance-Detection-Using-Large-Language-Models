@@ -1,5 +1,5 @@
 # Use NVIDIA base image with CUDA support
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04 as base
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04 AS base
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -54,9 +54,9 @@ RUN apt-get update && apt-get install -y \
 RUN R -e "install.packages(c('data.table', 'dataverse', 'rJava', 'plyr', 'dplyr', 'jsonlite', 'mongolite', 'qmap', 'lexicon', 'vader', 'ggplot2', 'irr', 'ggridges', 'gridExtra', 'grid', 'cowplot', 'ggforce', 'ggpubr', 'ggstance', 'extrafont', 'stringr', 'readxl', 'kableExtra', 'sentimentr', 'tm', 'qdap', 'stringi', 'httr', 'lubridate'), repos='https://cran.rstudio.com/')"
 
 # Combine with existing miniconda image to bypass organizational firewall
-FROM continuumio/miniconda3:latest as conda_base
+FROM continuumio/miniconda3:latest AS conda_base
 
-FROM base as final
+FROM base AS final
 
 COPY --from=conda_base /opt/conda /opt/conda
 
@@ -72,7 +72,6 @@ RUN conda update -n base -c conda-forge conda -y
 # Create conda environment with specified packages
 RUN conda create --name stay_tuned python=3.11 pytorch=2.6.0 pytorch-cuda=12.1 xformers accelerate trl peft bitsandbytes cudatoolkit numpy pandas scikit-learn scipy transformers notebook jupyter ipywidgets -c conda-forge -c pytorch -c xformers -c nvidia -y
 
-# Activate environment and install additional packages
 SHELL ["conda", "run", "-n", "stay_tuned", "/bin/bash", "-c"]
 
 # Set up environment variables
