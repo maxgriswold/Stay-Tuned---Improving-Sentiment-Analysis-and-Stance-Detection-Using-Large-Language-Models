@@ -23,6 +23,8 @@ subject_names = ['trump', 'biden']
 
 datasets = {}
 
+print(f"Starting pretrained and tuned models using training data: {train_set}")
+
 for data_name in data_names:
         df = pd.read_csv(f"data/processed/{data_name}_tweets_processed.csv")
         datasets[data_name] = df
@@ -419,3 +421,5 @@ def model_runs (model_name, short_name, train_set, subj):
     return f"Finished {short_name} {train_set} {subj}"
 
 check = [model_runs(model_name, short_name, train_set, subj) for short_name, model_name in models.items() for train_set in train_sets for subj in subject_names]
+
+print("All models finished!")

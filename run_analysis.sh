@@ -66,9 +66,6 @@ run_command() {
     fi
 }
 
-# Start pipeline
-conda activate twitter_train
-
 echo "Starting analysis pipeline..."
 echo "Run GPT models: $(if [ "$RUN_GPT" = false ]; then echo "NO"; else echo "YES"; fi)"
 echo "========================================"
@@ -93,9 +90,7 @@ training_sets=('party' 'nominate' 'handcode')
 
 for i in "${!training_sets[@]}"; do
     training_set="${training_sets[$i]}"
-	# Convert 0,1,2 to a,b,c
-    step_letter=$(printf "%c" $((97 + i)))  
-    run_command "conda run -n twitter_train python -u code/05_pretrained_transformer_methods.py $training_set" "Step 05$step_letter: Run Supervised Language models using training data: $training_set" "log/05_pretrained_transformer_methods_$training_set.log"
+    run_command "conda run -n stay_tuned python -u code/05_pretrained_transformer_methods.py $training_set" "Step 05: Run Supervised Language models using training data: $training_set" "log/05_pretrained_transformer_methods_$training_set.log"
 done
 
 # Only run GPT methods if desired by the user.

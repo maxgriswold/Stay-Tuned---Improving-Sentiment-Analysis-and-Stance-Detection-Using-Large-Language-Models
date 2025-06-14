@@ -1,5 +1,5 @@
-# Use Ubuntu 22.04 as base image
-FROM ubuntu:22.04 as base
+# Use NVIDIA base image with CUDA support
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04 as base
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
