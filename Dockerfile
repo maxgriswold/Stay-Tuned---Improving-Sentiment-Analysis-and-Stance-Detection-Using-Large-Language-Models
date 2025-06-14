@@ -1,9 +1,18 @@
-# Use NVIDIA base image with CUDA support
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04 AS base
+# Use NVIDIA base image with CUDA support (12.4 or higher)
+FROM nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04 AS base
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
+
+# Set CUDA environment variables for 12.4+
+ENV CUDA_HOME=/usr/local/cuda
+ENV CUDA_ROOT=/usr/local/cuda
+ENV PATH=/usr/local/cuda/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+ENV TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.0"
 
 # Set up basic system dependencies
 RUN apt-get update && apt-get install -y \
@@ -60,8 +69,14 @@ FROM base AS final
 
 COPY --from=conda_base /opt/conda /opt/conda
 
-# Add conda to PATH
-ENV PATH="/opt/conda/bin:$PATH"
+# Add conda to PATH and preserve CUDA environment for 12.4+
+ENV PATH="/opt/conda/bin:/usr/local/cuda/bin:$PATH"
+ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:/opt/conda/lib:$LD_LIBRARY_PATH"
+ENV CUDA_HOME=/usr/local/cuda
+ENV CUDA_ROOT=/usr/local/cuda
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+ENV TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.0"
 
 # Initialize conda
 RUN conda init bash
@@ -69,15 +84,21 @@ RUN conda init bash
 # Update conda
 RUN conda update -n base -c conda-forge conda -y
 
-# Create conda environment with specified packages
-RUN conda create --name stay_tuned python=3.11 pytorch=2.6.0 pytorch-cuda=12.1 xformers accelerate trl peft bitsandbytes cudatoolkit numpy pandas scikit-learn scipy transformers notebook jupyter ipywidgets -c conda-forge -c pytorch -c xformers -c nvidia -y
+# Create conda environment with PyTorch and CUDA support
+RUN conda create --name stay_tuned python=3.11 -c conda-forge -y
+
+# Activate environment and install PyTorch 2.6+ with CUDA 12.4+ support
+RUN conda run -n stay_tuned conda install "pytorch=2.6.0" "pytorch-cuda=12.1" -c pytorch -c nvidia -y 
+
+# Install additional packages
+RUN conda run -n stay_tuned conda install xformers accelerate trl peft bitsandbytes numpy pandas scikit-learn scipy transformers notebook jupyter ipywidgets -c conda-forge -c xformers -y
 
 SHELL ["conda", "run", "-n", "stay_tuned", "/bin/bash", "-c"]
 
-# Set up environment variables
+# Set up environment variables for the conda environment
 ENV CONDA_DEFAULT_ENV=stay_tuned
 ENV CONDA_PREFIX=/opt/conda/envs/stay_tuned
-ENV PATH="/opt/conda/envs/stay_tuned/bin:$PATH"
+ENV PATH="/opt/conda/envs/stay_tuned/bin:/usr/local/cuda/bin:$PATH"
 
 # Create working directory
 WORKDIR /workspace
@@ -91,8 +112,12 @@ RUN chmod u+x /workspace/stay-tuned/run_analysis.sh
 # Set default shell to bash
 SHELL ["/bin/bash", "-c"]
 
-# Create activation script
+# Create activation script with CUDA environment
 RUN echo '#!/bin/bash' > /opt/conda/activate_env.sh && \
+    echo 'export CUDA_HOME=/usr/local/cuda' >> /opt/conda/activate_env.sh && \
+    echo 'export CUDA_ROOT=/usr/local/cuda' >> /opt/conda/activate_env.sh && \
+    echo 'export PATH=/usr/local/cuda/bin:/opt/conda/envs/stay_tuned/bin:$PATH' >> /opt/conda/activate_env.sh && \
+    echo 'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:/opt/conda/envs/stay_tuned/lib:$LD_LIBRARY_PATH' >> /opt/conda/activate_env.sh && \
     echo 'source /opt/conda/etc/profile.d/conda.sh' >> /opt/conda/activate_env.sh && \
     echo 'conda activate stay_tuned' >> /opt/conda/activate_env.sh && \
     chmod +x /opt/conda/activate_env.sh
