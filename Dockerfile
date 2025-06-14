@@ -70,15 +70,15 @@ RUN conda init bash
 RUN conda update -n base -c conda-forge conda -y
 
 # Create conda environment with specified packages
-RUN conda create --name twitter_train python=3.11 pytorch=2.6.0 pytorch-cuda=12.1 xformers cudatoolkit numpy pandas scikit-learn scipy transformers notebook jupyter ipywidgets -c conda-forge -c pytorch -c xformers -c nvidia -y
+RUN conda create --name stay_tuned python=3.11 pytorch=2.6.0 pytorch-cuda=12.1 xformers accelerate trl peft bitsandbytes cudatoolkit numpy pandas scikit-learn scipy transformers notebook jupyter ipywidgets -c conda-forge -c pytorch -c xformers -c nvidia -y
 
 # Activate environment and install additional packages
-SHELL ["conda", "run", "-n", "twitter_train", "/bin/bash", "-c"]
+SHELL ["conda", "run", "-n", "stay_tuned", "/bin/bash", "-c"]
 
 # Set up environment variables
-ENV CONDA_DEFAULT_ENV=twitter_train
-ENV CONDA_PREFIX=/opt/conda/envs/twitter_train
-ENV PATH="/opt/conda/envs/twitter_train/bin:$PATH"
+ENV CONDA_DEFAULT_ENV=stay_tuned
+ENV CONDA_PREFIX=/opt/conda/envs/stay_tuned
+ENV PATH="/opt/conda/envs/stay_tuned/bin:$PATH"
 
 # Create working directory
 WORKDIR /workspace
@@ -95,7 +95,7 @@ SHELL ["/bin/bash", "-c"]
 # Create activation script
 RUN echo '#!/bin/bash' > /opt/conda/activate_env.sh && \
     echo 'source /opt/conda/etc/profile.d/conda.sh' >> /opt/conda/activate_env.sh && \
-    echo 'conda activate twitter_train' >> /opt/conda/activate_env.sh && \
+    echo 'conda activate stay_tuned' >> /opt/conda/activate_env.sh && \
     chmod +x /opt/conda/activate_env.sh
 
 # Set default command
