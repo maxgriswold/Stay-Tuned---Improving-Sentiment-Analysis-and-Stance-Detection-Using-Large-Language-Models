@@ -1,13 +1,18 @@
-# Use official PyTorch image with CUDA 12.4 - use devel image for build tools
-FROM nvidia/cuda:12.4.0-devel-ubuntu22.04 AS base
+
+# Use CUDA 11.8 for better PyTorch compatibility
+FROM nvidia/cuda:11.8.0-devel-ubuntu22.04 AS base
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Set CUDA environment variables
+# Set CUDA environment variables for runtime compatibility
 ENV CUDA_HOME=/usr/local/cuda
+ENV CUDA_ROOT=/usr/local/cuda
 ENV PATH=${CUDA_HOME}/bin:${PATH}
-ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${CUDA_HOME}/compat:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:${LD_LIBRARY_PATH}
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+ENV CUDA_VISIBLE_DEVICES=all
 
 # Set up basic system dependencies
 RUN apt-get update && apt-get install -y \
@@ -63,9 +68,6 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 # Set PATH
 ENV PATH="/root/miniconda3/bin:${PATH}"
 
-# Install PyTorch with CUDA support
-RUN pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
-
 # Install additional Python packages using conda
 RUN conda install -c conda-forge -c huggingface \
     accelerate \
@@ -84,6 +86,11 @@ RUN conda install -c conda-forge -c huggingface \
     -y && \
     conda clean -afy
 
+# Install PyTorch with CUDA support
+RUN pip install torch --index-url https://download.pytorch.org/whl/cu118 && \
+    # Force rebuild of PyTorch CUDA detection
+    python -c "import torch; torch.ops.load_library('torch_cuda')" || true
+
 # Create working directory
 WORKDIR /work
 
@@ -92,6 +99,4 @@ RUN git clone https://github.com/maxgriswold/Stay-Tuned---Improving-Sentiment-An
     echo "Stay-Tuned repository cloned successfully"
 
 RUN chmod u+x /work/stay-tuned/run_analysis.sh
-
-# Set default command
 CMD ["/bin/bash"]
