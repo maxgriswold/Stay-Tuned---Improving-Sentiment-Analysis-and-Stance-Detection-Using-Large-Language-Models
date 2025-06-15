@@ -1,16 +1,27 @@
 # Use NVIDIA base image with CUDA 12.1 support
-FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04 AS base
+FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04 AS base
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
 
 # Set up basic system dependencies
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    gfortran \
+    libreadline-dev \
+    libx11-dev \
+    libxt-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libcairo2-dev \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    libbz2-dev \
+    libzstd-dev \
+    liblzma-dev \
     wget \
     curl \
     git \
-    build-essential \
     software-properties-common \
     apt-transport-https \
     ca-certificates \
@@ -21,17 +32,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R 4.3.2
-RUN apt-get update && \
-    apt-get install -y software-properties-common dirmngr && \
-    wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | gpg --dearmor -o /usr/share/keyrings/r-project.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/r-project.gpg] https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" > /etc/apt/sources.list.d/r-project.list && \
-    apt-get update && \
-    apt-cache policy r-base && \
-    apt-get install -y r-base=4.3.2-1.2204.0 r-base-dev=4.3.2-1.2204.0 || \
-    apt-get install -y r-base r-base-dev && \
-    apt-mark hold r-base r-base-dev && \
-    rm -rf /var/lib/apt/lists/*
+WORKDIR /tmp
 
+RUN wget https://cran.r-project.org/src/base/R-4/R-4.3.2.tar.gz && \
+    tar -xf R-4.3.2.tar.gz && \
+    cd R-4.3.2 && \
+    ./configure --enable-R-shlib --with-blas --with-lapack && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && \
+    rm -rf R-4.3.2*
+	
 # Install Java for rJava
 RUN apt-get update && apt-get install -y \
     default-jdk \
@@ -53,12 +64,14 @@ RUN apt-get update && apt-get install -y \
 # Install R packages
 RUN R -e "install.packages(c('data.table', 'dataverse', 'rJava', 'plyr', 'dplyr', 'jsonlite', 'mongolite', 'qmap', 'lexicon', 'vader', 'ggplot2', 'irr', 'ggridges', 'gridExtra', 'grid', 'cowplot', 'ggforce', 'ggpubr', 'ggstance', 'extrafont', 'stringr', 'readxl', 'kableExtra', 'sentimentr', 'tm', 'qdap', 'stringi', 'httr', 'lubridate'), repos='https://cran.rstudio.com/')"
 
-# Combine with existing miniconda image to bypass organizational firewall
-FROM continuumio/miniconda3:latest AS conda_base
+# Install Miniconda
+ENV CONDA_DIR=/opt/conda
+ENV PATH=$CONDA_DIR/bin:$PATH
 
-FROM base AS final
-
-COPY --from=conda_base /opt/conda /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh && \
+    bash /tmp/miniconda.sh -b -p $CONDA_DIR && \
+    rm /tmp/miniconda.sh && \
+    conda clean -afy
 
 # Initialize conda
 RUN conda init bash
@@ -69,15 +82,13 @@ RUN conda update -n base -c conda-forge conda -y
 # Create conda environment with Python and basic packages
 RUN conda create --name stay_tuned python=3.11 -c conda-forge -y
 
-RUN conda run -n stay_tuned conda install pytorch pytorch-cuda=12.1 -c nvidia -c conda-forge -y
+RUN conda run -n stay_tuned conda install pytorch=2.6.0 pytorch-cuda=12.1 -c nvidia -c conda-forge -y
 
 # Install remaining packages via conda
 RUN conda run -n stay_tuned conda install accelerate trl peft bitsandbytes transformers numpy pandas scikit-learn scipy notebook jupyter ipywidgets  -c conda-forge -c huggingface -y 
 
-# Install xformers separately as it can be tricky
+# Install xformers separately since it can fail to install when included in a big list of installations.
 RUN conda run -n stay_tuned conda install xformers -c conda-forge
-
-SHELL ["conda", "run", "-n", "stay_tuned", "/bin/bash", "-c"]
 
 # Create working directory
 WORKDIR /workspace
