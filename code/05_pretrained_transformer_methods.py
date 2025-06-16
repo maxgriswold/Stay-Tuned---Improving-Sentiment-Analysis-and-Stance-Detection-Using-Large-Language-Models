@@ -143,10 +143,10 @@ def zero_model (model_name, subj, dd_name):
     
     return(dd)
     
-df_zero = [zero_model(x, y, d) for x in [*models] for y in subject_names for d in data_names]
-df_zero = pd.concat(df_zero)
+#df_zero = [zero_model(x, y, d) for x in [*models] for y in subject_names for d in data_names]
+#df_zero = pd.concat(df_zero)
 
-df_zero.to_csv(f'data/results/zero_shot_results.csv', index = False)
+#df_zero.to_csv(f'data/results/zero_shot_results.csv', index = False)
 
 # Run tuned models:
 
@@ -420,6 +420,6 @@ def model_runs (model_name, short_name, train_set, subj):
 
     return f"Finished {short_name} {train_set} {subj}"
 
-check = [model_runs(model_name, short_name, train_set, subj) for short_name, model_name in models.items() for train_set in train_sets for subj in subject_names]
+check = [model_runs(model_name, short_name, train_set, subj) for short_name, model_name in models.items() for subj in subject_names]
 
 print("All models finished!")
