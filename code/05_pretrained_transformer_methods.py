@@ -99,7 +99,7 @@ def zero_model (model_name, subj, dd_name):
     
     # Deberta requires a slightly different input than the other models involving a hypothesis
     # and possible classes:
-    if model_name == 'MoritzLaurer/deberta-v3-large-zeroshot-v2.0':
+    if model_name == 'deberta':
 
         hypothesis_template = f"The stance of this text concerning {subj} is "
         hypothesis_template = hypothesis_template + "{}"

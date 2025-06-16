@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install -y \
     libbz2-dev \
     libzstd-dev \
     liblzma-dev \
+	libxml2-dev \
+	libpq-dev \
     wget \
     curl \
     git \
@@ -32,10 +34,17 @@ RUN apt-get update && apt-get install -y \
     nano \
     && rm -rf /var/lib/apt/lists/*
 
-# Install R
-RUN apt-key adv --no-tty --keyserver keyserver.ubuntu.com --recv-keys 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
-    add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
-    apt-get update && apt-get install -y r-base r-base-dev
+# Install R 4.3.2
+RUN apt-get update && \
+    apt-get install -y software-properties-common dirmngr && \
+    wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | gpg --dearmor -o /usr/share/keyrings/r-project.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/r-project.gpg] https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" > /etc/apt/sources.list.d/r-project.list && \
+    apt-get update && \
+    apt-cache policy r-base && \
+    apt-get install -y r-base=4.3.2-1.2204.0 r-base-dev=4.3.2-1.2204.0 || \
+    apt-get install -y r-base r-base-dev && \
+    apt-mark hold r-base r-base-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install Java for rJava
 RUN apt-get update && apt-get install -y \
@@ -47,7 +56,7 @@ RUN apt-get update && apt-get install -y \
 RUN R CMD javareconf
 
 # Install R packages
-RUN R -e "install.packages(c('data.table', 'dataverse', 'rJava', 'plyr', 'dplyr', 'jsonlite', 'mongolite', 'qmap', 'lexicon', 'vader', 'ggplot2', 'irr', 'ggridges', 'gridExtra', 'grid', 'cowplot', 'ggforce', 'ggpubr', 'ggstance', 'extrafont', 'stringr', 'readxl', 'kableExtra', 'sentimentr', 'tm', 'qdap', 'stringi', 'httr', 'lubridate'), repos='https://cran.rstudio.com/')"
+RUN R -e "install.packages(c('data.table', 'rJava', 'plyr', 'dplyr', 'jsonlite', 'mongolite', 'qmap', 'lexicon', 'ggplot2', 'irr', 'ggridges', 'gridExtra', 'grid', 'cowplot', 'ggforce', 'ggpubr', 'ggstance', 'extrafont', 'stringr', 'readxl', 'kableExtra', 'sentimentr', 'tm', 'vader', 'qdap', 'stringi', 'httr', 'lubridate', 'dataverse'))"
 
 # Download and install Miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \

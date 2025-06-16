@@ -3,7 +3,6 @@
 rm(list = ls())
 
 library(sentimentr)
-library(mongolite)
 library(tm)
 library(qdap)
 library(lexicon)
