@@ -38,7 +38,6 @@ df_semi_pretrained[, tuned := F]
 df_semi_pretrained[, tune_data := NA]
 df_semi_pretrained[, prompt_name := NA]
 df_semi_pretrained[, subject := NULL]
-setnames(df_semi_pretrained, "twitter_sentiment", "sentiment_tweet")
 
 # Tuned semi-supervised models
 semi_tuned_models <- files[grep("tweetnlp|siebert|distilbert|deberta", files)]
