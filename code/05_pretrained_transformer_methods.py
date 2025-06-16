@@ -160,7 +160,7 @@ def prep_inputs(train_set, subj):
     if train_set == 'party':
 
         # Get ID for train/test set, using same set as those used for GPT:
-        train_id = pd.read_csv(f"data/training/training_key_{subj}.csv")
+        train_id = pd.read_csv(f"data/raw/supplement/training_key_{subj}.csv")
 
         id_train = train_id[train_id['train'] == True].id.values
         id_test  = train_id[train_id['train'] == False].id.values
@@ -179,7 +179,7 @@ def prep_inputs(train_set, subj):
     if train_set == 'nominate':
 
         # Get ID for train/test set, using same set as those used for GPT:
-        train_id = pd.read_csv(f"data/training/training_key_{subj}.csv")
+        train_id = pd.read_csv(f"data/raw/supplement/training_key_{subj}.csv")
 
         id_train = train_id[train_id['train'] == True].id.values
         id_test  = train_id[train_id['train'] == False].id.values
@@ -198,7 +198,7 @@ def prep_inputs(train_set, subj):
     if train_set == 'handcode':
 
         # Get ID for train/test set, using same set as those used for GPT:
-        train_id = pd.read_csv(f"data/training/training_key_{subj}_handcode.csv")
+        train_id = pd.read_csv(f"data/raw/supplement/training_key_{subj}_handcode.csv")
 
         id_train = train_id[train_id['train'] == True].id.values
         id_test  = train_id[train_id['train'] == False].id.values
