@@ -95,10 +95,10 @@ echo "========================================"
 # Define training sets
 training_sets=('party' 'nominate' 'handcode')
 
-for i in "${!training_sets[@]}"; do
-    training_set="${training_sets[$i]}"
-    run_command "python -u code/05_pretrained_transformer_methods.py $training_set" "Step 05: Run Supervised Language models using training data: $training_set" "log/05_pretrained_transformer_methods_$training_set.log"
-done
+#for i in "${!training_sets[@]}"; do
+#    training_set="${training_sets[$i]}"
+#    run_command "python -u code/05_pretrained_transformer_methods.py $training_set" "Step 05: Run Supervised Language models using training data: $training_set" "log/05_pretrained_transformer_methods_$training_set.log"
+#done
 
 # Only run GPT methods if desired by the user.
 if [ "$RUN_GPT" = true ]; then
