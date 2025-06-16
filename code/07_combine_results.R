@@ -100,7 +100,7 @@ df_final[, data_name := mapvalues(data_name, from = c("kawintiranon_2021", "li_2
 # Add on observed data:
 merge_scores <- function(d_name){
   
-  df_score <- fread(sprintf("./processed/%s_tweets_processed.csv", d_name))
+  df_score <- fread(sprintf("./data/processed/%s_tweets_processed.csv", d_name))
   df_sub <- df_final[data_name == d_name,]
   
   if (d_name == 'pol'){
@@ -157,7 +157,7 @@ square_data <- function(m_id){
   d_name    <- unique(dd$data_name)
   s_name <- unique(dd$subject)
   
-  df_score <- fread(sprintf("./processed/%s_tweets_processed.csv", d_name))
+  df_score <- fread(sprintf("./data/processed/%s_tweets_processed.csv", d_name))
   
   if (d_name == 'pol'){
     df_score[subject == "biden", score := ifelse(party_code == "D", 1, -1)]
@@ -192,9 +192,9 @@ square_data <- function(m_id){
 df_final <- rbindlist(lapply(unique(df_final$model_id), square_data))
 
 # Add on an indicator for whether the data was used for training or not:
-df_score <- fread("./processed/pol_tweets_processed.csv")
-train_id_biden <- fread("./interim/training_key_biden.csv")
-train_id_trump <- fread("./interim/training_key_trump.csv")
+df_score <- fread("./data/processed/pol_tweets_processed.csv")
+train_id_biden <- fread("./data/raw/supplement/training_key_biden.csv")
+train_id_trump <- fread("./data/raw/supplement/training_key_trump.csv")
 
 train_id <- rbind(train_id_biden, train_id_trump)
 train_id[, data_name := 'pol']
@@ -204,27 +204,10 @@ df_score <- df_score[id %in% train_id$id,]
 df_final <- join(df_final, train_id, by = c('data_name', 'id'), type = "left")
 
 # Add on hand-code scores for subset of politician data:
-df_hand_pol <- fread("./processed/handcode_pol_tweets_processed.csv")[, .(id, score)]
+df_hand_pol <- fread("./data/processed/handcode_pol_tweets_processed.csv")[, .(id, score)]
 df_hand_pol[, data_name := 'pol']
 setnames(df_hand_pol, "score", "score_coded")
 
 df_final <- join(df_final, df_hand_pol, by = c("id", "data_name"), type = "left")
 
-write.csv(df_final, "C:/Users/griswold/Documents/github/twitter-representative-pop/public_facing/data/results/stance_results_12_11_24_v4.csv", row.names = F)
-
-# Calculate initial GOF:
-
-calc_pearson <- function(dd, outcome){
-  
-  res <- cor.test(dd$est_score, dd[, get(outcome)])
-  
-  res <- data.table(corr = res$estimate,
-                   lower = res$conf.int[1],
-                   upper = res$conf.int[2])
-  
-  return(res)
-  
-}
-
-check <- df_final[, calc_pearson(.SD), by = "model_id"]
-check <- join(check, unique(df_final[, .(model_id, model_name, tune_data, data_name, prompt_name, subject)]), type = 'left')
+write.csv(df_final, "./data/results/analysis_results.csv", row.names = F)
