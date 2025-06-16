@@ -30,7 +30,36 @@ cd "$SCRIPT_DIR"
 # Create log directory if it doesn't exist
 mkdir -p log
 
-# Function to run a command and check for errors
+# Check if nvidia-container-toolkit is already installed. Otherwise, install
+if command -v nvidia-ctk &> /dev/null; then
+    echo "NVIDIA Container Toolkit found"
+else
+    echo "NVIDIA Container Toolkit not found. Installing..."
+
+    # Update package index and install dependencies
+    apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+        gnupg \
+        lsb-release
+
+    # Add NVIDIA GPG key
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+
+    # Add NVIDIA Container Toolkit repository
+    distribution=$(. /etc/os-release; echo $ID$VERSION_ID)
+    curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#' | \
+        tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+    # Install NVIDIA container toolkit
+    apt-get update && apt-get install -y nvidia-container-toolkit
+	
+	echo "NVIDIA Container Toolkit successfully installed."
+	
+fi
+
+# Run commands in both R and Python piping errors and output to log files. 
 run_command() {
     local cmd="$1"
     local description="$2"
