@@ -344,9 +344,7 @@ def tune_model (model_name, train_set, subj):
         train_dataset = train_dataset,
         eval_dataset = test_dataset,
         compute_metrics = compute_metrics,
-        callbacks = [EarlyStoppingCallback(early_stopping_patience=3)],
-
-        metric_for_best_model='f1'
+        callbacks = [EarlyStoppingCallback(early_stopping_patience=3)]
 
     )
 
