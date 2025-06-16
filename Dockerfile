@@ -33,21 +33,21 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R
-#RUN apt-key adv --no-tty --keyserver keyserver.ubuntu.com --recv-keys 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
-#    add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
-#    apt-get update && apt-get install -y r-base r-base-dev
+RUN apt-key adv --no-tty --keyserver keyserver.ubuntu.com --recv-keys 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
+    add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
+    apt-get update && apt-get install -y r-base r-base-dev
 
 # Install Java for rJava
-#RUN apt-get update && apt-get install -y \
-#    default-jdk \
-#    default-jre \
-#    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    default-jdk \
+    default-jre \
+    && rm -rf /var/lib/apt/lists/*
 
 # Configure Java for R
-#RUN R CMD javareconf
+RUN R CMD javareconf
 
 # Install R packages
-#RUN R -e "install.packages(c('data.table', 'dataverse', 'rJava', 'plyr', 'dplyr', 'jsonlite', 'mongolite', 'qmap', 'lexicon', 'vader', 'ggplot2', 'irr', 'ggridges', 'gridExtra', 'grid', 'cowplot', 'ggforce', 'ggpubr', 'ggstance', 'extrafont', 'stringr', 'readxl', 'kableExtra', 'sentimentr', 'tm', 'qdap', 'stringi', 'httr', 'lubridate'), repos='https://cran.rstudio.com/')"
+RUN R -e "install.packages(c('data.table', 'dataverse', 'rJava', 'plyr', 'dplyr', 'jsonlite', 'mongolite', 'qmap', 'lexicon', 'vader', 'ggplot2', 'irr', 'ggridges', 'gridExtra', 'grid', 'cowplot', 'ggforce', 'ggpubr', 'ggstance', 'extrafont', 'stringr', 'readxl', 'kableExtra', 'sentimentr', 'tm', 'qdap', 'stringi', 'httr', 'lubridate'), repos='https://cran.rstudio.com/')"
 
 # Download and install Miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
@@ -66,13 +66,14 @@ RUN conda run -n stay_tuned pip install torch==2.7.0+cu118 xformers --index-url 
 
 # Install remaining packages.
 #RUN conda install -n stay_tuned -y -c conda-forge pandas scipy scikit-learn notebook jupyter ipywidgets accelerate transformers 
+RUN conda run -n stay_tuned pip install pandas scipy scikit-learn notebook jupyter ipywidgets accelerate transformers 
 
 # Create working directory
 WORKDIR /work
 
 # Clone the GitHub repository
-#RUN git clone https://github.com/maxgriswold/Stay-Tuned---Improving-Sentiment-Analysis-and-Stance-Detection-Using-Large-Language-Models.git stay-tuned && \
-#    echo "Stay-Tuned repository cloned successfully"
+RUN git clone https://github.com/maxgriswold/Stay-Tuned---Improving-Sentiment-Analysis-and-Stance-Detection-Using-Large-Language-Models.git stay-tuned && \
+    echo "Stay-Tuned repository cloned successfully"
 
 #RUN chmod u+x /work/stay-tuned/run_analysis.sh
 CMD ["/bin/bash"]
