@@ -65,7 +65,6 @@ RUN conda create -y -n stay_tuned python=3.10
 RUN conda run -n stay_tuned pip install torch==2.7.0+cu118 xformers --index-url https://download.pytorch.org/whl/cu118
 
 # Install remaining packages.
-#RUN conda install -n stay_tuned -y -c conda-forge pandas scipy scikit-learn notebook jupyter ipywidgets accelerate transformers 
 RUN conda run -n stay_tuned pip install pandas scipy scikit-learn notebook jupyter ipywidgets accelerate transformers 
 
 # Create working directory

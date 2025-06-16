@@ -397,7 +397,7 @@ def model_runs (model_name, short_name, train_set, subj):
 
     print(f"Saving {short_name} {train_set} {subj}")
 
-    model_path = f"models/{short_name}_{train_set}_{subj}.pt"
+    #model_path = f"models/{short_name}_{train_set}_{subj}.pt"
     
     #if os.path.exists(model_path):
     #    os.remove(model_path)
