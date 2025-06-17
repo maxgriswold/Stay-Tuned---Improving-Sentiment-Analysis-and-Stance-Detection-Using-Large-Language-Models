@@ -50,8 +50,9 @@ run_command() {
     if [ -n "$log_file" ]; then
         # Run with logging
         if eval "$cmd" > "$log_file" 2>&1; then
-			current_time=$(date +%s)
-			elapsed_time=$((current_time - initial_time)/60)
+		
+			# Calculate real-world time, rounding up mins since BASH uses integer arithmetic
+			elapsed_time=$((($(date +%s) - initial_time) / 60))
             echo "✓ Completed: $description. Took $elapsed_time mins."
             echo ""
         else
