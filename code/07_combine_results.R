@@ -204,7 +204,7 @@ df_score <- df_score[id %in% train_id$id,]
 df_final <- join(df_final, train_id, by = c('data_name', 'id'), type = "left")
 
 # Add on hand-code scores for subset of politician data:
-df_hand_pol <- fread("./data/processed/handcode_pol_tweets_processed.csv")[, .(id, score)]
+df_hand_pol <- fread("./data/raw/supplement/politician_tweets_handcoded.csv")[, .(id, score)]
 df_hand_pol[, data_name := 'pol']
 setnames(df_hand_pol, "score", "score_coded")
 
