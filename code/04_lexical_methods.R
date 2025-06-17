@@ -19,7 +19,7 @@ df_pol  <- fread("./data//processed/pol_tweets_processed.csv")
 df_user <- fread("./data//processed/user_val_tweets_processed.csv")
 
 analysis_datasets <- list("pol" = df_pol, 
-                          "user" = df_user,
+                          "user_val" = df_user,
                           "li_2021" = df_li,
                           "kawintiranon_2021" = df_kaw)
 

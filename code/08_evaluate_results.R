@@ -152,7 +152,7 @@ writeLines(output, "./paper/latex/example_texts.tex")
 # Distribution Plots (EDF v. Estimates) #
 #########################################
 
-pol_val <- fread("./data/raw/handcode_pol_tweets.csv")[, .(id, score, subject)]
+pol_val <- fread("./data/raw/supplement/politician_tweets_handcoded.csv")[, .(id, score, subject)]
 pol_id  <- fread("./data/processed/pol_tweets_processed.csv")[, .(id, party_code, nominate_dim1, subject)]
 
 plot_dist <- function(d_name, dd, include_tuned = F){
@@ -293,11 +293,6 @@ plot_dist <- function(d_name, dd, include_tuned = F){
                             labels = c("Republican", "Democrat"),
                             values = c("#ff8080", "#8080ff"),
                             name = "Party", guide = 'legend') 
-    
-    # p_a <- p %+% df_plot[code_subset == F, ] + labs(subtitle = "All tweets", x = "") + guides(fill = 'none')
-    # p_b <- p %+% df_plot[code_subset == T, ] + labs(title = "", subtitle = "Human-Coded tweets")
-    
-    #p <- plot_grid(p_a, p_b, align = 'v', nrow = 2)
     
   }else if (d_name == 'user'){
     p <- p +
