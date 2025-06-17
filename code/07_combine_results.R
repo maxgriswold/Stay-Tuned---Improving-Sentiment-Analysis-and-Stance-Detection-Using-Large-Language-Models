@@ -118,7 +118,7 @@ merge_scores <- function(d_name){
   if (d_name == 'user_val'){
 
     biden_and_trump <- "(?i)(?=.*biden)(?=.*trump)"
-    df_score[, both_subjects := ifelse(grepl(trump, text, perl = TRUE), T, F)]
+    df_score[, both_subjects := ifelse(grepl(biden_and_trump, text, perl = TRUE), T, F)]
     
   }else{
     df_score[, both_subjects := F]
@@ -167,7 +167,7 @@ square_data <- function(m_id){
   if (d_name == 'user_val'){
     
     biden_and_trump <- "(?i)(?=.*biden)(?=.*trump)"
-    df_score[, both_subjects := ifelse(grepl(trump, text, perl = TRUE), T, F)]
+    df_score[, both_subjects := ifelse(grepl(biden_and_trump, text, perl = TRUE), T, F)]
     
   }else{
     df_score[, both_subjects := F]
