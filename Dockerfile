@@ -83,5 +83,5 @@ WORKDIR /work
 RUN git clone https://github.com/maxgriswold/Stay-Tuned---Improving-Sentiment-Analysis-and-Stance-Detection-Using-Large-Language-Models.git stay-tuned && \
     echo "Stay-Tuned repository cloned successfully"
 
-#RUN chmod u+x /work/stay-tuned/run_analysis.sh
+RUN chmod u+x /work/stay-tuned/run_analysis.sh
 CMD ["/bin/bash"]

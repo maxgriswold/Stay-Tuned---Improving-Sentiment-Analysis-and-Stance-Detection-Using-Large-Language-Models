@@ -174,9 +174,6 @@ df[, text := gsub("/t.co\\S+", "", text)]
 df[, text := gsub("<.*>", "", text)]
 df[, text := gsub("[^\x01-\x7F]", "", text)]
 
-# Create author_id based on person name
-df[, author_id := as.numeric(as.factor(username))]
-
 # Recode id to make it easier to merge later
 df[, id := .I]
 
@@ -192,8 +189,6 @@ df_val[, text := gsub("http\\S+", "", text)]
 df_val[, text := gsub("/t.co\\S+", "", text)]
 df_val[, text := gsub("<.*>", "", text)]
 df_val[, text := gsub("[^\x01-\x7F]", "", text)]
-
-df_val[, author_id := as.numeric(as.factor(username))]
 df_val[, id := .I]
 
 write.csv(df_val, "./data/processed/user_val_tweets_processed.csv", row.names = F)
