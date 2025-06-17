@@ -138,15 +138,15 @@ df_final[, model_id := as.numeric(factor(paste0(model_name, tune_data, data_name
 df_final <- df_final[, .(model_id, model_name, tuned, tune_data, data_name, prompt_name, subject, both_subjects, id, sentiment_tweet, score, score_nominate)]
 
 setnames(df_final, c("sentiment_tweet"), c("est_score"))
-df_final <- unique(df_final)
 
 # For the small number of GPT models where responses returned text indicating GPT would
-# not assign a score due to a lack of stance, set these values to NA. This affects
-# 4 not-tuned GPT 3.5 models using prompt 6, where 1 - 4% of estimates were not numeric values:
-# View(df_final[, round(.SD[is.na(sentiment_tweet), .N]/.SD[, .N], 3), by = "model_id"])
+# not assign a score due to a lack of stance, set these values to 0 This affects
+# 4 not-tuned GPT 3.5 models using prompt 6, where 1 - 4% of estimates were not numeric values.
+# Overall, less than 0.09% of estimated score values impacted.
 
 df_final[is.na(est_score), est_score := 0]
 
+# Remove a few odd duplicates that occurred (~90 rows/1.5 million)
 df_final <- unique(df_final)
 df_final <- df_final[, .SD[1], by = c("model_id", "id")]
 

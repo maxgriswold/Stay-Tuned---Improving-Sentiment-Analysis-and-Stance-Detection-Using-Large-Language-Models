@@ -142,11 +142,14 @@ def zero_model (model_name, subj, dd_name):
     dd = dd[['id', 'model_name', 'data_name', 'subject', 'sentiment_tweet']]
     
     return(dd)
-    
-df_zero = [zero_model(x, y, d) for x in [*models] for y in subject_names for d in data_names]
-df_zero = pd.concat(df_zero)
 
-df_zero.to_csv(f'data/results/zero_shot_results.csv', index = False)
+# Calculate zero-shot model results, if they don't  exist:
+if not os.path.exists('data/results/zero_shot_results.csv')
+
+    df_zero = [zero_model(x, y, d) for x in [*models] for y in subject_names for d in data_names]
+    df_zero = pd.concat(df_zero)
+
+    df_zero.to_csv(f'data/results/zero_shot_results.csv', index = False)
 
 # Run tuned models:
 

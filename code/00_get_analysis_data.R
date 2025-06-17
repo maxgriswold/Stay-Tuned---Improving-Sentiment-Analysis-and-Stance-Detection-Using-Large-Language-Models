@@ -14,16 +14,16 @@ if (!dir.exists("./data/processed")){
   dir.create("./data/processed")
 }
 
-if (!dir.exists("./data/interim")){
-  dir.create("./data/interim")
-}
-
 if (!dir.exists("./data/training")){
   dir.create("./data/training")
 }
 
 if (!dir.exists("./data/results")){
   dir.create("./data/results")
+}
+
+if (!dir.exists("./data/results/summary_statistics")){
+  dir.create("./data/results/summary_statistics")
 }
 
 if (!dir.exists("./paper/latex")){

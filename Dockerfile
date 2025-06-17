@@ -62,7 +62,7 @@ RUN apt-get update && apt-get install -y \
 RUN R CMD javareconf
 
 # Install R packages
-RUN R -e "install.packages(c('data.table', 'rJava', 'plyr', 'dplyr', 'jsonlite', 'mongolite', 'qmap', 'lexicon', 'ggplot2', 'irr', 'ggridges', 'gridExtra', 'grid', 'cowplot', 'ggforce', 'ggpubr', 'ggstance', 'extrafont', 'stringr', 'readxl', 'kableExtra', 'sentimentr', 'tm', 'vader', 'qdap', 'stringi', 'httr', 'lubridate', 'dataverse'))"
+RUN R -e "install.packages(c('data.table', 'rJava', 'plyr', 'dplyr', 'jsonlite', 'mongolite', 'qmap', 'lexicon', 'ggplot2', 'irr', 'ggridges', 'gridExtra', 'grid', 'cowplot', 'ggforce', 'ggpubr', 'ggstance', 'extrafont', 'stringr', 'readxl', 'kableExtra', 'sentimentr', 'tm', 'vader', 'qdap', 'stringi', 'httr', 'lubridate', 'dataverse', 'psych'))"
 
 # Download and install Miniconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \

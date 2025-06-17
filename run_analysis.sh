@@ -111,7 +111,9 @@ fi
 
 run_command "Rscript --no-save --no-restore --verbose code/07_combine_results.R" "Step 07: Combine all estimates into result table" "log/07_combine_results.Rout"
 
-run_command "Rscript --no-save --no-restore --verbose code/08_evaluate_results.R" "Step 08: Analyze and visualize results" "log/08_evaluate_results.Rout"
+run_command "Rscript --no-save --no-restore --verbose code/08_calculate_summary_statistics.R" "Step 08: Calculate summary statistics" "log/08_calculate_summary_statistics.Rout"
+
+run_command "Rscript --no-save --no-restore --verbose code/09_evaluate_results.R" "Step 09: Analyze and visualize results" "log/09_evaluate_results.Rout"
 
 echo "========================================"
 echo "✓ Analysis pipeline completed successfully!"

@@ -1,6 +1,4 @@
-# Sentiment method plots
-# Max Griswold
-# 6/21/23
+# Stance detection plots and tables
 
 rm(list = ls())
 
@@ -33,7 +31,7 @@ df <- fread("./data/results/analysis_results.csv")
 
 outcome <- c("cont", "bin", "cat")
 
-data_names      <- c('pol', 'user', 'kawintiranon', 'li')
+data_names      <- c('pol', 'user_val', 'kawintiranon', 'li')
 data_names_long <- c("116th U.S. Congress", "Twitter Users", 
                      "Kawintiranon & Singh, 2021",  "P-Stance")
 
@@ -82,7 +80,7 @@ df[, tune_name_long := factor(tune_name_long, levels = c("Tuned (Human-Coded)", 
 #################
 
 pol_text  <- fread("./data/processed/pol_tweets_processed.csv")[, .(id, text)]
-user_text <- fread("./data/processed/user_train_tweets_processed.csv")[, .(id, text, subject)]
+user_text <- fread("./data/processed/user_val_tweets_processed.csv")[, .(id, text, subject)]
 
 pol_text <- pol_text[id %in% c(789, 2617, 16836, 10910),]
 user_text <- user_text[id %in% c(289, 752, 375, 2), ]
@@ -421,7 +419,7 @@ dev.off()
 # Inter-rater reliability #
 ###########################
 
-pol_scored <- fread("./data/raw/pol_tweets_scored.csv")[, .(text, subject, scorer_1, scorer_2)]
+pol_scored <- fread("./data/raw/supplement/politician_tweets_handcoded.csv")[, .(text, subject, scorer_1, scorer_2)]
 
 # Get the two sets of users scores: validation and train sets:
 user_val   <- fread("./data/raw/user_val_tweets.csv")[, .(text, subject, scorer_1, scorer_2)]
@@ -471,8 +469,8 @@ table(df_combine[subject == "Trump"]$scorer_1, df_combine[subject == "Trump"]$sc
 # Scatterplots: ID, Nominate, Human-Coded #
 ###########################################
 
-# Choosing any two model_id (biden+trump) to get one set of the validation data:
-df_pol <- df[model_id %in% c(97, 98) & !is.na(score_coded), .(id, score, score_nominate, score_coded)]
+# Choosing any two models (biden+trump) to get one set of the validation data for politicians
+df_pol <- df[!is.na(score_coded) & data_name == 'pol' & model_name == 'vader', .(id, score, score_nominate, score_coded)]
 df_pol <- join(df_pol, pol_id[, .(id, party_code, subject)], type = "left", by = "id")
 
 df_pol[, subject := str_to_title(subject)]
@@ -577,7 +575,7 @@ plot_pred_v_obs <- function(d_name, vers, dd){
 }
 
 args <- expand.grid("vers" = c("Pretrained", "Tuned", "Prompts"),
-                    "d_name" = c('pol', 'user'))
+                    "d_name" = c('pol', 'user_val'))
 
 p <- mapply(plot_pred_v_obs, args$d_name, args$vers, MoreArgs = list(dd = df), SIMPLIFY = F)
 
@@ -617,10 +615,6 @@ for (i in 1:dim(args)[1]){
 summary_filepath <- "./data/results/summary_statistics/"
 files <- paste0(summary_filepath, list.files(summary_filepath))
 
-# For now, leave out the five category test and the nominate test since 
-# these results do not show different patterns than existing files:
-files <- files[!(files %like% "polnom"|files %like% "user5cat")]
-
 # Create lookup table to add back model_id to make merges easier later:
 df_id <- unique(df[, .(model_id, model_name, tuned, tune_data, data_name, prompt_name, subject)])
 
@@ -628,7 +622,7 @@ process_excel <- function(fp){
   
   fp_sheets <- excel_sheets(fp)
   
-  d_name <- gsub(".*/||Results.*", "", fp)
+  d_name <- gsub(".*/||_summary.*", "", fp)
   
   files <- list()
   
@@ -665,7 +659,7 @@ process_excel <- function(fp){
     # for rows with single subjects, and rows with boths subjects. Add additional
     # indicator column for this.
     
-    if (d_name == 'user'){
+    if (d_name == 'user_val'){
       d[, sub_pop := gsub(".*, ", "", outcome_type)]
       d[, outcome_type := gsub(", .*", "", outcome_type)]
     }else{
@@ -690,6 +684,7 @@ process_excel <- function(fp){
   }
   
   return(files)
+  
 }
 
 df_summary <- lapply(files, process_excel)
@@ -792,7 +787,7 @@ dev.off()
 
 keep_models <- c("gpt4o", "gpt35", "deberta", "siebert")
 
-df_fig3 <- df_cont[model_name %in% keep_models & tuned == F & prompt_name %in% c(NA, "p3") & data_name == 'user']
+df_fig3 <- df_cont[model_name %in% keep_models & tuned == F & prompt_name %in% c(NA, "p3") & data_name == 'user_val']
 
 # Get a unique vector of model names, then sort that vector by the highest correlation
 # within the Biden models
@@ -846,7 +841,7 @@ keep_models <- c("gpt4o", "gpt35", "deberta", 'siebert')
 # Compare results in Pol and User datasets:
 # Pretrained Deberta, GPT3.5, GPT4o
 # v. Tuned w/ party, tuned with handcode, or using few-shot prompt
-df_fig4 <- df_cont[data_name %in% c('pol', 'user') & 
+df_fig4 <- df_cont[data_name %in% c('pol', 'user_val') & 
                    model_name %in% keep_models & 
                    ((prompt_name %in% c(NA, "p3"))|(tune_data %in% c('party', "handcode"))),]
 
@@ -907,7 +902,7 @@ dev.off()
 # Fig 5. Changes in correlation following tuning - Binary version #
 ###################################################################
 
-df_fig5 <- df_bin[data_name %in% c('pol', 'user') & 
+df_fig5 <- df_bin[data_name %in% c('pol', 'user_val') & 
                      model_name %in% keep_models & 
                      ((prompt_name %in% c(NA, "p4"))|(tune_data %in% c('party', "handcode"))),]
 
@@ -970,12 +965,12 @@ dev.off()
 
 keep_models <- c('gpt35', 'gpt4o')
 
-df_fig6 <- df_cont[data_name %in% c('pol', 'user') & 
+df_fig6 <- df_cont[data_name %in% c('pol', 'user_val') & 
                   model_name %in% keep_models & 
                   (tuned == F|tuned == T & tune_data %in% c("handcode", "party")),]
 
 # Hold onto tuned results for in-target tuning
-df_fig6 <- df_fig6[((tuned == F)|(tune_data == "party" & data_name == "pol")|(tune_data == "handcode" & data_name == "user")),]
+df_fig6 <- df_fig6[((tuned == F)|(tune_data == "party" & data_name == "pol")|(tune_data == "handcode" & data_name == "user_val")),]
 
 df_fig6 <- df_fig6[sub_pop %in% c(NA, "both", "one"),]
 
@@ -1047,7 +1042,7 @@ dev.off()
 
 keep_models <- c('gpt35', 'gpt4o')
 
-df_fig7 <- df_bin[data_name %in% c('pol', 'user') & 
+df_fig7 <- df_bin[data_name %in% c('pol', 'user_val') & 
                      model_name %in% keep_models & 
                      tuned == F,]
 
@@ -1119,7 +1114,7 @@ dev.off()
 
 keep_models <- c("gpt4o", "gpt35", "siebert", "vader", "nrc")
 
-df_fig8 <- df_cat[model_name %in% keep_models & tuned == F & prompt_name %in% c(NA, "p3") & data_name == 'user']
+df_fig8 <- df_cat[model_name %in% keep_models & tuned == F & prompt_name %in% c(NA, "p3") & data_name == 'user_val']
 
 # Get a unique vector of model names, then sort that vector by the highest correlation
 # within the Biden models
@@ -1170,7 +1165,7 @@ keep_models <- c("gpt4o", "gpt35", 'siebert')
 # Compare results in Pol and User datasets:
 # Pretrained Deberta, GPT3.5, GPT4o
 # v. Tuned w/ party, tuned with handcode, or using few-shot prompt
-df_fig9 <- df_cat[data_name %in% c('user') & 
+df_fig9 <- df_cat[data_name %in% c('user_val') & 
                      model_name %in% keep_models & 
                      ((prompt_name %in% c(NA, "p3"))|(tune_data %in% c("handcode"))),]
 
@@ -1232,7 +1227,7 @@ keep_models <- c("gpt4o", "gpt35", "deberta", 'siebert')
 # Compare results in Pol and User datasets:
 # Pretrained Deberta, GPT3.5, GPT4o
 # v. Tuned w/ party, tuned with handcode, or using few-shot prompt
-df_fig10 <- df_cont[data_name %in% c('pol', 'user') & 
+df_fig10 <- df_cont[data_name %in% c('pol', 'user_val') & 
                      model_name %in% keep_models & 
                      ((tune_data %in% c('nominate', "handcode", "party"))),]
 
