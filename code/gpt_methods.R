@@ -31,8 +31,6 @@ if (length(args) > 1){
   tune <- F
 }
 
-run_date <- format(Sys.Date(), "%d_%m_%y")
-
 # If recovery == F, get initial set of results. recovery == T attempts to check each file
 # to see if any estimates were lost due to hitting internal API rate limits or timeouts, 
 # adding these results to existing files. See log files to determine if recovery might be 
@@ -40,9 +38,15 @@ run_date <- format(Sys.Date(), "%d_%m_%y")
 
 recovery <- F
 
+if (recovery){
+	if (!dir.exists("./data/results/recovery")){
+		dir.create("./data/results/recovery")
+	}
+}
+
 # Load datasets
 df_pol  <- fread("./data/pol_tweets_processed.csv")
-df_user <- fread("./data/user_tweets_processed.csv")
+df_user <- fread("./data/user_validate_tweets_processed.csv")
 df_li   <- fread("./data/li_tweets_processed.csv")
 df_kaw  <- fread("./data/kawintiranon_tweets_processed.csv")
 
@@ -68,7 +72,7 @@ api_info <- fread("./api_info.csv")
 subjects <- c("trump", "biden")
 
 analysis_datasets <- list("pol" = df_pol, 
-                         "user" = df_user,
+                         "user_val" = df_user,
                          "li_2021" = df_li,
                          "kawintiranon_2021" = df_kaw)
 
@@ -201,7 +205,7 @@ run_llm_analysis <- function(llm_mod, subject_name, prompt_name, df_name, temp =
       lost_estimates <- data.table("llm_mod" = llm_mod, "df_name" = df_name, "prompt_name" = prompt_name,
                                    "subject_name" = subject_name, "tweet_id" = segment[missing_results])
                                    
-      filename_lost_estimates <- sprintf("./%s/lost_estimates_gpt35.csv", run_date)
+      filename_lost_estimates <- sprintf("./data/results/lost_estimates_gpt35.csv")
         
       if (!file.exists(filename_lost_estimates)){
         write.table(lost_estimates, filename_lost_estimates, sep = ",", row.names = F)
@@ -228,7 +232,7 @@ run_llm_analysis <- function(llm_mod, subject_name, prompt_name, df_name, temp =
       # anyway and this ensures we do not lose a batch if an error occurs due to a
       # network disconnect.
       
-      filename <- sprintf("./%s/%s_%s_%s_%s.csv", run_date, llm_mod, df_name, prompt_name, subject_name)
+      filename <- sprintf("./data/results/%s_%s_%s_%s.csv", llm_mod, df_name, prompt_name, subject_name)
       
       if (batches[i] == 1){
         if (file.exists(filename)){
@@ -440,7 +444,7 @@ recover_results <- function(llm_mod, subject_name, prompt_name, df_name){
   dd <- analysis_datasets[[df_name]]
   dd <- dd[subject == subject_name,]
   
-  filename <- sprintf("./%s/%s_%s_%s_%s.csv", run_date, llm_mod, df_name, prompt_name, subject_name)
+  filename <- sprintf("./data/results/%s_%s_%s_%s.csv", llm_mod, df_name, prompt_name, subject_name)
   dd_est <- fread(filename)
 
   # Ensure column names were set (some files were missing colnames):
@@ -531,14 +535,14 @@ recover_results <- function(llm_mod, subject_name, prompt_name, df_name){
 
     print(sprintf("Saving. Added %s of %s estimates missing from results", new, old))
 
-    filename <- sprintf("./%s/recovery/%s_%s_%s_%s.csv", run_date, llm_mod, df_name, prompt_name, subject_name)
+    filename <- sprintf("./data/results/recovery/%s_%s_%s_%s.csv", llm_mod, df_name, prompt_name, subject_name)
     write.table(dd_est, file = filename, sep = ",", row.names = F)
 
   }else{
 
     print(sprintf("No missing estimates!"))
   
-    filename <- sprintf("./%s/recovery/%s_%s_%s_%s.csv", run_date, llm_mod, df_name, prompt_name, subject_name)
+    filename <- sprintf("./data/results/recovery/%s_%s_%s_%s.csv", run_date, llm_mod, df_name, prompt_name, subject_name)
     write.table(dd_est, file = filename, sep = ",", row.names = F)
 
   }
@@ -547,7 +551,7 @@ recover_results <- function(llm_mod, subject_name, prompt_name, df_name){
   df_recovery <- data.table("llm_mod" = llm_mod, "df_name" = df_name, "prompt_name" = prompt_name,
                             "subject_name" = subject_name, "n_ests" = dim(dd_est)[1], "n_data" = dim(dd)[1])
 
-  filename_recovery <- sprintf("./%s/estimate_recovery_tracking.csv", run_date)
+  filename_recovery <- sprintf("./data/results/estimate_recovery_tracking.csv", run_date)
 
   if (!file.exists(filename_recovery)){
     write.table(df_recovery, filename_recovery, sep = ",", row.names = F)

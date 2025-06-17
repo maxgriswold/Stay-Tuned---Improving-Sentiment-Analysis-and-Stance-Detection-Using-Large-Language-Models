@@ -29,9 +29,7 @@ library(readxl)
 
 library(kableExtra)      # For generating Latex tables from dataframes
 
-setwd("C:/users/griswold/Documents/GitHub/twitter-representative-pop/public_facing")
-
-df     <- fread("./data/results/stance_results_12_11_24_v4.csv")
+df <- fread("./data/results/analysis_results.csv")
 
 outcome <- c("cont", "bin", "cat")
 
@@ -84,7 +82,7 @@ df[, tune_name_long := factor(tune_name_long, levels = c("Tuned (Human-Coded)", 
 #################
 
 pol_text  <- fread("./data/processed/pol_tweets_processed.csv")[, .(id, text)]
-user_text <- fread("./data/processed/user_tweets_processed.csv")[, .(id, text, subject)]
+user_text <- fread("./data/processed/user_train_tweets_processed.csv")[, .(id, text, subject)]
 
 pol_text <- pol_text[id %in% c(789, 2617, 16836, 10910),]
 user_text <- user_text[id %in% c(289, 752, 375, 2), ]
@@ -154,7 +152,7 @@ writeLines(output, "./paper/latex/example_texts.tex")
 # Distribution Plots (EDF v. Estimates) #
 #########################################
 
-pol_val <- fread("./data/processed/handcode_pol_tweets_processed.csv")[, .(id, score, subject)]
+pol_val <- fread("./data/raw/handcode_pol_tweets.csv")[, .(id, score, subject)]
 pol_id  <- fread("./data/processed/pol_tweets_processed.csv")[, .(id, party_code, nominate_dim1, subject)]
 
 plot_dist <- function(d_name, dd, include_tuned = F){
@@ -185,30 +183,9 @@ plot_dist <- function(d_name, dd, include_tuned = F){
     dd_add[, `Score (DW-Nominate)` := ifelse(subject == "biden", nominate_dim1*-1, nominate_dim1)]
     
     setnames(dd_add, "score", "Score (Human-Coded)")
-
-    # Make two datasets to add onto the politican results.
-    # 1. Party code indicators as an additional column
-    # 2. Three sets of validation scores (Nominate, Party, User) as additional rows
-                       
-    # dd_validate <- dd_add[ ,.(id, subject, `Score (DW-Nominate)`, `Score (Human-Coded)`)]
-    # dd_validate <- melt(dd_validate, id.vars = c("id", "subject"), variable.name = "model_name_long", value.name = "est_score")
-    # dd_validate[, `:=`(data_name_long = unique(dd$data_name_long), 
-    #                    tune_name_long = NA, prompt_name_long = NA, tuned = F,
-    #                    subject = str_to_title(subject), both_subjects = F,
-    #                    method_type = "Validation")]
-    # 
-    # # Remove rows where we didn't score tweets for "Score (Human-Coded)"
-    # dd_validate <- dd_validate[!is.na(est_score)]
-    # 
-    # df_plot <- rbind(dd, dd_validate)
     
     dd_party <- unique(dd_add[, .(party_code, id)])
     df_plot <- join(dd, dd_party, by = c("id"), type = 'left')
-    
-    # Add additional column that separates out distributions for the subset coded v. entire datasets:
-    #df_plot[, code_subset := ifelse(id %in% pol_val$id, T, F)]
-    
-    #df_plot <- df_plot[code_subset == F|(code_subset == T & !(model_name_long %in% c("Score (DW-Nominate)", "Score (Human-Coded)"))),]
     
   }else if(d_name == 'user'){
     
@@ -348,20 +325,6 @@ plot_dist <- function(d_name, dd, include_tuned = F){
   
 }
 
-# dist_pre <- lapply(data_names, plot_dist, dd = df, include_tuned = F)
-# 
-# ggsave("./figs/full_distribution_plots_pretrained.pdf", 
-#        plot = marrangeGrob(dist_pre, nrow = 1, ncol = 1, top = NULL), 
-#        width = 11.69, 
-#        height = 8.27)
-# 
-# dist_tune <- lapply(data_names, plot_dist, dd = df, include_tuned = T)
-# 
-# ggsave("./figs/full_distribution_plots_tuned.pdf", 
-#        plot = marrangeGrob(dist_tune, nrow = 1, ncol = 1, top = NULL), 
-#        width = 11.69, 
-#        height = 8.27)
-
 # For main paper, only plot results for selected samples:
 select_models   <- c("gpt4o", "gpt35", "deberta", "siebert")
 select_prompts   <- c("p3", NA)
@@ -463,14 +426,11 @@ dev.off()
 # Inter-rater reliability #
 ###########################
 
-pol_scored <- fread("./data/raw/pol_tweets_scored.csv")[, .(text, subject_name, scorer_1, scorer_2)]
-setnames(pol_scored, "subject_name", "subject")
+pol_scored <- fread("./data/raw/pol_tweets_scored.csv")[, .(text, subject, scorer_1, scorer_2)]
 
 # Get the two sets of users scores: validation and train sets:
-user_val   <- fread("./data/raw/user_tweets.csv")[, .(text, person, scorer_1, scorer_2)]
-setnames(user_val, "person", "subject")
-
-user_train <- fread("./data/raw/user_handcode_train.csv")[, .(text, subject, scorer_1, scorer_2)]
+user_val   <- fread("./data/raw/user_val_tweets.csv")[, .(text, subject, scorer_1, scorer_2)]
+user_train <- fread("./data/raw/user_train_tweets.csv")[, .(text, subject, scorer_1, scorer_2)]
 
 df_combine <- rbindlist(list(pol_scored, user_train, user_val))
 

@@ -25,3 +25,11 @@ if (!dir.exists("./data/training")){
 if (!dir.exists("./data/results")){
   dir.create("./data/results")
 }
+
+if (!dir.exists("./paper/latex")){
+  dir.create("./paper/latex")
+}
+
+if (!dir.exists("./figs")){
+  dir.create("./figs")
+}

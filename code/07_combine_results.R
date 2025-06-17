@@ -47,7 +47,7 @@ prep_semi_tuned <- function(f){
   dd <- fread(sprintf("./%s/%s", path, f))
   model_name <- gsub("_tune.*", "", f)
   tune_data <- gsub(".*_(party|handcode|nominate)_.*", "\\1", f)
-  data_name <- gsub(".*_(kawintiranon|li|pol|user)_.*", "\\1", f)
+  data_name <- gsub(".*_(kawintiranon|li|pol|user_val)_.*", "\\1", f)
   
   if (model_name =='deberta' & tune_data == 'handcode'){
     dd[, sentiment_tweet := sentiment_tweet*-1]
@@ -75,7 +75,7 @@ prep_gpt <- function(f){
   model_name <- gsub("(gpt35|gpt4|gpt4o).*", "\\1", f)
   tuned <- ifelse(grepl("tune", f) == T, T, F)
   tune_data <- ifelse(tuned, gsub(".*_(party|handcode|nominate)_.*", "\\1", f), NA)
-  data_name <- gsub(".*_(kawintiranon|li|pol|user)_.*", "\\1", f)
+  data_name <- gsub(".*_(kawintiranon|li|pol|user_val)_.*", "\\1", f)
   prompt_name <- gsub(".*_(p[0-9]+)_.*", "\\1", f)
   
   dd[, tuned := tuned]
@@ -115,7 +115,7 @@ merge_scores <- function(d_name){
   
   # If merging user data, determine rows where text mentions both subjects.
   # Otherwise, set column for both_subjects equal to F:
-  if (d_name == 'user'){
+  if (d_name == 'user_val'){
     
     df_score[, both_subjects := .N, by = c("author_id", "text")]
     df_score[, both_subjects := ifelse(both_subjects > 1, T, F)]
@@ -141,7 +141,7 @@ setnames(df_final, c("sentiment_tweet"), c("est_score"))
 df_final <- unique(df_final)
 
 # For the small number of GPT models where responses returned text indicating GPT would
-# not assign as score due to a lack of stance, set these values to NA. This affects
+# not assign a score due to a lack of stance, set these values to NA. This affects
 # 4 not-tuned GPT 3.5 models using prompt 6, where 1 - 4% of estimates were not numeric values:
 # View(df_final[, round(.SD[is.na(sentiment_tweet), .N]/.SD[, .N], 3), by = "model_id"])
 
@@ -164,7 +164,7 @@ square_data <- function(m_id){
     df_score[subject == "trump", score := ifelse(party_code == "D", -1, 1)]
   }
   
-  if (d_name == 'user'){
+  if (d_name == 'user_val'){
     
     df_score[, both_subjects := .N, by = c("author_id", "text")]
     df_score[, both_subjects := ifelse(both_subjects > 1, T, F)]

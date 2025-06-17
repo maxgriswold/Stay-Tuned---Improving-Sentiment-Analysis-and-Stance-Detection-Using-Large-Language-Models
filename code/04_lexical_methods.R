@@ -16,7 +16,7 @@ library(stringi)
 df_li   <- fread("./data/processed/li_tweets_processed.csv")
 df_kaw  <- fread("./data//processed/kawintiranon_tweets_processed.csv")
 df_pol  <- fread("./data//processed/pol_tweets_processed.csv")
-df_user <- fread("./data//processed/user_tweets_processed.csv")
+df_user <- fread("./data//processed/user_val_tweets_processed.csv")
 
 analysis_datasets <- list("pol" = df_pol, 
                           "user" = df_user,

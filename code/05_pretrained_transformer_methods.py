@@ -18,7 +18,7 @@ import os, shutil, gc, sys
 
 # Set up model types:
 train_set = sys.argv[1]
-data_names = ['pol', 'user', 'li', 'kawintiranon']
+data_names = ['pol', 'user_val', 'li', 'kawintiranon']
 subject_names = ['trump', 'biden']
 
 datasets = {}
@@ -143,17 +143,17 @@ def zero_model (model_name, subj, dd_name):
     
     return(dd)
     
-#df_zero = [zero_model(x, y, d) for x in [*models] for y in subject_names for d in data_names]
-#df_zero = pd.concat(df_zero)
+df_zero = [zero_model(x, y, d) for x in [*models] for y in subject_names for d in data_names]
+df_zero = pd.concat(df_zero)
 
-#df_zero.to_csv(f'data/results/zero_shot_results.csv', index = False)
+df_zero.to_csv(f'data/results/zero_shot_results.csv', index = False)
 
 # Run tuned models:
 
 def prep_inputs(train_set, subj):
 
     if train_set == 'handcode':
-        df = pd.read_csv('data/processed/handcode_tweets_processed.csv')
+        df = pd.read_csv('data/processed/user_train_tweets_processed.csv')
     else:
         df = datasets['pol'].copy()
 

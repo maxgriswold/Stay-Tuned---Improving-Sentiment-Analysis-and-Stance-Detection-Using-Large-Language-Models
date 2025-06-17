@@ -47,13 +47,13 @@ library(lubridate)
 # 
 # profiles <- con_prof$find(query = qprof, fields = fprof)
 # 
-# write.csv(biden, "./data/raw/congress_tweets_biden.csv", row.names = F)
-# write.csv(trump, "./data/raw/congress_tweets_trump.csv", row.names = F)
-# write.csv(profiles, "./data/raw/congress_twitter_profiles.csv", row.names = F)
+# write.csv(biden, "./data/raw/politician_tweets_biden.csv", row.names = F)
+# write.csv(trump, "./data/raw/politician_tweets_trump.csv", row.names = F)
+# write.csv(profiles, "./data/raw/politician_twitter_profiles.csv", row.names = F)
 
-biden <- fread("./data/raw/congress_tweets_biden.csv")
-trump <- fread("./data/raw/congress_tweets_trump.csv")
-profiles <- fread("./data/raw/congress_twitter_profiles.csv")
+biden <- fread("./data/raw/politician_tweets_biden.csv")
+trump <- fread("./data/raw/politician_tweets_trump.csv")
+profiles <- fread("./data/raw/politician_twitter_profiles.csv")
 
 biden$subject <- "biden"
 trump$subject <- "trump"
@@ -162,42 +162,11 @@ df <- df[, .(id, bioname, text, subject, date, nominate_dim1, party_code, loc)]
 
 write.csv(df, "./data/processed/pol_tweets_processed.csv", row.names = F)
 
-# Process hand-coded validation tweet dataset to match format of 
-# politican tweets
-df_biden <- fread("./data/raw/handcode_validation_tweets_biden.csv")
-df_biden[, subject := "biden"]
-
-df_trump <- fread("./data/raw/handcode_validation_tweets_trump.csv")
-df_trump[, subject := "trump"]
-
-df_original <- rbindlist(list(df_trump, df_biden))
-setnames(df_original, names(df_original), c("tweet_id", "date", "username", "text", "subject"))
-
-df_original <- df_original[, .(tweet_id, date, username, text)]
-
-# Convert date to same time zone as the other datasets.
-df_original[, date := as.POSIXct(date, tz="UTC")]
-df_original[, date := format(date, "%m/%d/%Y %H:%M")]
-
-# Read in the hand
-df <- fread("./data/raw/handcode_pol_tweets.csv")
-
-# Replace text in scored tweets w/ fixed text in original tweets.
-setnames(df, names(df), c("date", "username", "subject", "scorer_1", "scorer_2"))
-df <- df[, .(date, username, subject, scorer_1, scorer_2)]
+# Read in the hand-coded train tweets
+df <- fread("./data/raw/user_train_tweets.csv")
 
 # Average hand-code together to get final score:
 df[, score := (scorer_1 + scorer_2)/2]
-
-# Standardizing date/time
-df[, date := as.POSIXct(date, format = "%m/%d/%Y %H:%M")]
-df[, date := format(date, "%m/%d/%Y %H:%M")]
-
-df <- join(df, df_original, by = c("date", "username"), type = "left")
-
-# Saving a slightly different processed file which contains scores across each analyst
-# which are used for plotting intercoder rater reliability statistics later
-write.csv(df, "./data/raw/user_tweets.csv", row.names = F)
 
 # Remove hyperlinks and html,
 df[, text := gsub("http\\S+", "", text)]
@@ -211,34 +180,13 @@ df[, author_id := as.numeric(as.factor(username))]
 # Recode id to make it easier to merge later
 df[, id := .I]
 
-# Again, saving a slightly different processed file which contains scores across each analyst
-# which are used for plotting intercoder rater reliability statistics later
-write.csv(df, "./data/processed/user_tweets_processed.csv", row.names = F)
+write.csv(df, "./data/processed/user_train_tweets_processed.csv", row.names = F)
 
 # Prep validation tweets
-df_biden_val <- fread("./data/raw/handcode_train_tweets_biden.csv")
-df_biden_val[, subject := "biden"]
-
-df_trump_val <- fread("./data/raw/handcode_train_tweets_trump.csv")
-df_trump_val[, subject := "trump"]
-
-df_val <- rbindlist(list(df_trump_val, df_biden_val))
-
-# Fix the excel issue from the underlying sheet.
-setnames(df_val, names(df_val), c("tweet_id", "date", "username", "scorer_1", "scorer_2", "full_text", "subject"))
+df_val <- fread("./data/raw/user_val_tweets.csv")
 
 # Average hand-code together to get final score:
 df_val[, score := (scorer_1 + scorer_2)/2]
-
-# Standardizing date/time.
-df_val[, date := as.POSIXct(date, format = "%m/%d/%Y %H:%M")]
-df_val[, date := format(date, "%m/%d/%Y %H:%M")]
-
-df_val <- join(df_val, df_original, by = c("date", "username"), type = "left")
-df_val <- df_val[, .(date, username, scorer_1, scorer_2, score, subject, text)]
-
-# Again, saving separate file for IRR:
-write.csv(df_val, "./data/raw/user_handcode_train.csv", row.names = F)
 
 df_val[, text := gsub("http\\S+", "", text)]
 df_val[, text := gsub("/t.co\\S+", "", text)]
@@ -248,6 +196,5 @@ df_val[, text := gsub("[^\x01-\x7F]", "", text)]
 df_val[, author_id := as.numeric(as.factor(username))]
 df_val[, id := .I]
 
-df_val <- df_val[, .(author_id, id, text, score, subject)]
-write.csv(df_val, "./data/processed/handcode_tweets_processed.csv", row.names = F)
+write.csv(df_val, "./data/processed/user_val_tweets_processed.csv", row.names = F)
 

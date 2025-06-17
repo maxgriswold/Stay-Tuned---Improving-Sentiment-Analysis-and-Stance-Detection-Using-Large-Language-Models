@@ -11,7 +11,7 @@ library(plyr)
 library(dplyr)
 
 df_pol  <- fread("./data/processed/pol_tweets_processed.csv")
-df_user <- fread("./data/processed/handcode_tweets_processed.csv")
+df_user <- fread("./data/processed/user_train_tweets_processed.csv")
 
 prep_train_data <- function(dataset, subject_name, formatting = 'llama'){
   
