@@ -116,9 +116,9 @@ merge_scores <- function(d_name){
   # If merging user data, determine rows where text mentions both subjects.
   # Otherwise, set column for both_subjects equal to F:
   if (d_name == 'user_val'){
-    
-    df_score[, both_subjects := .N, by = c("author_id", "text")]
-    df_score[, both_subjects := ifelse(both_subjects > 1, T, F)]
+
+    biden_and_trump <- "(?i)(?=.*biden)(?=.*trump)"
+    df_score[, both_subjects := ifelse(grepl(trump, text, perl = TRUE), T, F)]
     
   }else{
     df_score[, both_subjects := F]
@@ -166,8 +166,8 @@ square_data <- function(m_id){
   
   if (d_name == 'user_val'){
     
-    df_score[, both_subjects := .N, by = c("author_id", "text")]
-    df_score[, both_subjects := ifelse(both_subjects > 1, T, F)]
+    biden_and_trump <- "(?i)(?=.*biden)(?=.*trump)"
+    df_score[, both_subjects := ifelse(grepl(trump, text, perl = TRUE), T, F)]
     
   }else{
     df_score[, both_subjects := F]
