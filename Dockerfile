@@ -11,8 +11,6 @@ RUN apt-get update && apt-get install -y \
     libreadline-dev \
     libx11-dev \
     libxt-dev \
-    libpng-dev \
-    libjpeg-dev \
     libcairo2-dev \
     libssl-dev \
     libcurl4-openssl-dev \
@@ -21,9 +19,17 @@ RUN apt-get update && apt-get install -y \
     liblzma-dev \
 	libxml2-dev \
 	libpq-dev \
+	libharfbuzz-dev \
+	libfribidi-dev \
+	libfreetype6-dev \
+	libpng-dev \
+	libtiff5-dev \
+	libjpeg-dev \
+	libfontconfig1-dev \
     wget \
     curl \
     git \
+	cmake \
     software-properties-common \
     apt-transport-https \
     ca-certificates \
