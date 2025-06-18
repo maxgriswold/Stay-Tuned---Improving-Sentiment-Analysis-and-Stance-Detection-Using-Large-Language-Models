@@ -41,6 +41,7 @@ On a machine which has docker installed, the following code will run the analysi
 ```bash
 docker pull image mgriswol/stay-tuned
 docker run -it --gpus all mgriswol/stay-tuned
+cd /work/stay-tuned/
 git pull
 ./run_analysis.sh 
 ```
