@@ -34,9 +34,9 @@ Analysis code was run on a machine rented on [vast.ai](https://vast.ai/) using a
 
 To replicate this analysis, we suggest running the shell script on a unix machine containing a GPU supported by CUDA 11.8. We conducted the analysis on a RTX A4000 GPU, rented through vast.ai, which cost \~\$1 to run all scripts (run time without GPT models is approximately 5 hours, with GPT models is approximately 48 hours). 
 
-A template for running this code on vast.ai [can be found here](https://cloud.vast.ai/?ref_id=178510&creator_id=178510&name=Stay-Tuned), which uses the linked docker image to install all needed software.
+For convenience, a template for running this code can be found on vast.ai [can be found here](https://cloud.vast.ai/?ref_id=178510&creator_id=178510&name=Stay-Tuned), which uses the linked docker image to install all needed software. 
 
-On a machine which has docker installed, the following code will run the analysis. 
+On a machine which has docker installed, the following code will run the analysis (if using the vast.ai template linked above, the first two lines can be omitted). 
 
 ```bash
 docker pull image mgriswol/stay-tuned
