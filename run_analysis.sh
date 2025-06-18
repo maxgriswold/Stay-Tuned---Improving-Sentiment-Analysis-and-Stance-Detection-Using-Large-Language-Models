@@ -79,7 +79,11 @@ echo "Run GPT models: $(if [ "$RUN_GPT" = false ]; then echo "NO"; else echo "YE
 echo "========================================"
 
 # Run files in sequence
-run_command "Rscript --no-save --no-restore --verbose code/00_get_analysis_data.R" "Step 00: Get analysis data from Harvard Dataverse" "log/00_get_analysis_data.Rout"
+
+if [ "$RUN_GPT" = true ]; then
+	run_command "Rscript --no-save --no-restore --verbose code/00_get_analysis_data.R F" "Step 00: Get analysis data from Harvard Dataverse" "log/00_get_analysis_data.Rout"
+else
+	run_command "Rscript --no-save --no-restore --verbose code/00_get_analysis_data.R T" "Step 00: Get analysis data from Harvard Dataverse" "log/00_get_analysis_data.Rout"
 
 run_command "Rscript --no-save --no-restore --verbose code/01_prep_analysis_data.R" "Step 01: Prep Twitter data collected by study Team" "log/01_prep_analysis_data.Rout"
 
