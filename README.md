@@ -43,6 +43,7 @@ docker pull image mgriswol/stay-tuned
 docker run -it --gpus all mgriswol/stay-tuned
 cd /work/stay-tuned/
 git pull
+chmod u+x run_analysis.sh
 ./run_analysis.sh 
 ```
 ### Replicating OpenAI GPT models
