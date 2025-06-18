@@ -19,16 +19,16 @@ Analysis code was run on a machine rented on [vast.ai](https://vast.ai/) using a
 - **run_analysis.sh** executes all code in the **/code** folder.
 - - **Dockerfile** is a copy of the instructions used to build the docker image. This file contains a list of all packages used in the project, for those who do not wish to use a docker container.
 - **/code/** contains all scripts used in the analysis:
-  + **00_get_analysis_data.R** creates all needed folders for the project and downloads input data from the Dataverse repository.
-  + **01_prep_analysis_data.R** processes data collected by the study team into a consistent form for use within the analysis models.
-  + **02_process_external_datasets.R** processes data published by other authors.
-  + **03_prep_train_validate_datasets.R** creates training datasets for semi-supervised language models and large language models. This script also contains code to create training datasets for [Llama models](https://huggingface.co/meta-llama), in addition to training datasets for OpenAI models.
-  + **04_lexical_methods.R** estimates stance scores using Lexical (dictionary-based) methods.
-  + **05_pretrained_transformer_methods.py** estimates stance scores using pretrained and trained semi-supervised language models.
-  + **06_submit_tuned_gpt.sh** submits batch jobs to **gpt_methods.R** which estimate stance scores using large language models.
-  + **07_combine_results.R** consolidates estimates from steps 04 - 07 into a single output file.
-  +  **08_calculate_summary_statistics.R** calculates summary and goodness-of-fit statistics using the output from step 07.
-  +  **09_evaluate_results.R** creates tables and figures used in the published article, along with conducting several analyses presented in the supplementary materials.
+  + **00_get_analysis_data.R** creates all needed folders for the project and downloads input data from the Dataverse repository. (<20 min runtime)
+  + **01_prep_analysis_data.R** processes data collected by the study team into a consistent form for use within the analysis models. (<1 min runtime)
+  + **02_process_external_datasets.R** processes data published by other authors.  (<1 min runtime)
+  + **03_prep_train_validate_datasets.R** creates training datasets for semi-supervised language models and large language models. This script also contains code to create training datasets for [Llama models](https://huggingface.co/meta-llama), in addition to training datasets for OpenAI models.  (<1 min runtime)
+  + **04_lexical_methods.R** estimates stance scores using Lexical (dictionary-based) methods.  (25 min runtime)
+  + **05_pretrained_transformer_methods.py** estimates stance scores using pretrained and trained semi-supervised language models. (~4 hour runtime)
+  + **06_submit_tuned_gpt.sh** submits batch jobs to **gpt_methods.R** which estimate stance scores using large language models. (~40 hour runtime)
+  + **07_combine_results.R** consolidates estimates from steps 04 - 07 into a single output file. (<5 min runtime)
+  +  **08_calculate_summary_statistics.R** calculates summary and goodness-of-fit statistics using the output from step 07. (<5 min runtime)
+  +  **09_evaluate_results.R** creates tables and figures used in the published article, along with conducting several analyses presented in the supplementary materials. (<5 min runtime)
 
 ## Instructions 
 
