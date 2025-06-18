@@ -51,7 +51,7 @@ df_li   <- fread("./data/li_tweets_processed.csv")
 df_kaw  <- fread("./data/kawintiranon_tweets_processed.csv")
 
 # Load API information
-api_info <- fread("./api_info.csv")
+api_info <- fread("./data/supplement/api_info.csv")
 
 # Set up arguments for different model versions:
 
