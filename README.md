@@ -16,7 +16,9 @@ Analysis code was run on a machine rented on [vast.ai](https://vast.ai/) using a
 
 ## Repository Structure
 
-- **/code/** contains all scripts used in the article:
+- **run_analysis.sh** executes all code in the **/code** folder.
+- - **Dockerfile** is a copy of the instructions used to build the docker image. This file contains a list of all packages used in the project, for those who do not wish to use a docker container.
+- **/code/** contains all scripts used in the analysis:
   + **00_get_analysis_data.R** creates all needed folders for the project and downloads input data from the Dataverse repository.
   + **01_prep_analysis_data.R** processes data collected by the study team into a consistent form for use within the analysis models.
   + **02_process_external_datasets.R** processes data published by other authors.
@@ -27,8 +29,6 @@ Analysis code was run on a machine rented on [vast.ai](https://vast.ai/) using a
   + **07_combine_results.R** consolidates estimates from steps 04 - 07 into a single output file.
   +  **08_calculate_summary_statistics.R** calculates summary and goodness-of-fit statistics using the output from step 07.
   +  **09_evaluate_results.R** creates tables and figures used in the published article, along with conducting several analyses presented in the supplementary materials.
-- **Dockerfile** is a copy of the instructions used to build the docker image. This file contains a list of all packages used in the project, for those who do not wish to use a docker container.
-- **run_analysis.sh** executes all code in the **/code** folder.
 
 ## Instructions 
 
