@@ -39,9 +39,9 @@ A template for running this code on vast.ai [can be found here](https://cloud.va
 On a machine which has docker installed, the following code will run the analysis. 
 
 ```bash
-git pull
 docker pull image mgriswol/stay-tuned
 docker run -it --gpus all mgriswol/stay-tuned
+git pull
 ./run_analysis.sh 
 ```
 ### Replicating OpenAI GPT models
