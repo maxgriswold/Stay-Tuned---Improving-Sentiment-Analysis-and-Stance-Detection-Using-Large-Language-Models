@@ -36,8 +36,8 @@ get_data <- function(file_info, doi_link){
   
   write.csv(data, filepath, row.names = F)
   
-  # Try not to hammer the Harvard Dataverse with requests:
-  sys.sleep(5)
+  # Try not to submit too many requests to the Harvard Dataverse at once:
+  Sys.sleep(3)
   
   return("Finished!")
   
