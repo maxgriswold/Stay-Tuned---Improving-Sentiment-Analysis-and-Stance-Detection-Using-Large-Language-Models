@@ -19,7 +19,7 @@ Analysis code was run on a machine rented on [vast.ai](https://vast.ai/) using a
 - **run_analysis.sh** executes all code in the **/code** folder.
 - - **Dockerfile** is a copy of the instructions used to build the docker image. This file contains a list of all packages used in the project, for those who do not wish to use a docker container.
 - **/code/** contains all scripts used in the analysis:
-  + **00_get_analysis_data.R** creates all needed folders for the project and downloads input data from the Dataverse repository. (<20 min runtime)
+  + **00_get_analysis_data.R** creates all needed folders for the project and downloads input data from the Dataverse repository. (<30 min runtime)
   + **01_prep_analysis_data.R** processes data collected by the study team into a consistent form for use within the analysis models. (<1 min runtime)
   + **02_process_external_datasets.R** processes data published by other authors.  (<1 min runtime)
   + **03_prep_train_validate_datasets.R** creates training datasets for semi-supervised language models and large language models. This script also contains code to create training datasets for [Llama models](https://huggingface.co/meta-llama), in addition to training datasets for OpenAI models.  (<1 min runtime)
