@@ -144,7 +144,7 @@ def zero_model (model_name, subj, dd_name):
     return(dd)
 
 # Calculate zero-shot model results, if they don't  exist:
-if not os.path.exists('data/results/zero_shot_results.csv')
+if not os.path.exists('data/results/zero_shot_results.csv'):
 
     df_zero = [zero_model(x, y, d) for x in [*models] for y in subject_names for d in data_names]
     df_zero = pd.concat(df_zero)
