@@ -23,12 +23,12 @@ Analysis code was run on a machine rented on [vast.ai](https://vast.ai/) using a
   + **01_prep_analysis_data.R** processes data collected by the study team into a consistent form for use within the analysis models. (<1 min runtime)
   + **02_process_external_datasets.R** processes data published by other authors.  (<1 min runtime)
   + **03_prep_train_validate_datasets.R** creates training datasets for semi-supervised language models and large language models. This script also contains code to create training datasets for [Llama models](https://huggingface.co/meta-llama), in addition to training datasets for OpenAI models.  (<1 min runtime)
-  + **04_lexical_methods.R** estimates stance scores using Lexical (dictionary-based) methods.  (25 min runtime)
-  + **05_pretrained_transformer_methods.py** estimates stance scores using pretrained and trained semi-supervised language models. (~4 hour runtime)
-  + **06_submit_tuned_gpt.sh** submits batch jobs to **gpt_methods.R** which estimate stance scores using large language models. (~40 hour runtime)
-  + **07_combine_results.R** consolidates estimates from steps 04 - 07 into a single output file. (<5 min runtime)
-  +  **08_calculate_summary_statistics.R** calculates summary and goodness-of-fit statistics using the output from step 07. (<5 min runtime)
-  +  **09_evaluate_results.R** creates tables and figures used in the published article, along with conducting several analyses presented in the supplementary materials. (<5 min runtime)
+  + **04_lexical_methods.R** estimates stance scores using Lexical (dictionary-based) methods.  (~15 min runtime)
+  + **05_pretrained_transformer_methods.py** estimates stance scores using pretrained and trained semi-supervised language models. (~1 hour runtime)
+  + **06_submit_tuned_gpt.sh** submits batch jobs to **gpt_methods.R** which estimate stance scores using large language models. (~48 hour runtime)
+  + **07_combine_results.R** consolidates estimates from steps 04 - 07 into a single output file. (<1 min runtime)
+  +  **08_calculate_summary_statistics.R** calculates summary and goodness-of-fit statistics using the output from step 07. (<1 min runtime)
+  +  **09_evaluate_results.R** creates tables and figures used in the published article, along with conducting several analyses presented in the supplementary materials. (<1 min runtime)
 
 ## Instructions 
 
