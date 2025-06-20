@@ -60,11 +60,11 @@ For questions, please feel free to reach out to griswold[at]rand.org.
 
 ## References
 
-Griswold, Max, Robbins, Michael, Pollard, Michael. (2025). "Stay Tuned! - Improving Sentiment Analysis and Stance Detection Using Large Language Models". *Political Analysis*. 
+Griswold, Max, Robbins, Michael, Pollard, Michael. (2025). "Stay Tuned - Improving Sentiment Analysis and Stance Detection Using Large Language Models". *Political Analysis*. 
 
 ```tex
 @misc{griswold2025staytuned,
-      title={Stay Tuned! - Improving Sentiment Analysis and Stance Detection Using Large Language Models}, 
+      title={Stay Tuned - Improving Sentiment Analysis and Stance Detection Using Large Language Models}, 
       author={Max Griswold, Michael Robbins, and Michael Pollard},
       year={2025},
       journal={Political Analysis}
