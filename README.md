@@ -1,4 +1,4 @@
-# Stay Tuned! - Improving Sentiment Analysis and Stance Detection Using Large Language Models
+# Stay Tuned - Improving Sentiment Analysis and Stance Detection Using Large Language Models
 
 ## Introduction
 
@@ -73,5 +73,5 @@ Griswold, Max, Robbins, Michael, Pollard, Michael. (2025). "Stay Tuned! - Improv
 
 ## License
 
-This repository is released as open-source software under a GPL-3.0 license. See the LICENSE file for more details.
+This repository is released as open-source software under a MIT license. See the LICENSE file for more details.
 
