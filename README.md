@@ -2,11 +2,11 @@
 
 ## Introduction
 
-This repository contains code for the article *Stay Tuned! - Improving Sentiment Analysis and Stance Detection Using Large Language Models*, replicating the paper's analysis. Underlying data for this project can be found in associated Harvard Dataverse repository, [Stay Tuned](https://dataverse.harvard.edu/dataverse/stay-tuned), and a copy of the computing enivornment can be found as a [docker image](https://hub.docker.com/repository/docker/mgriswol/stay-tuned/general).
+This repository contains code for the article *Stay Tuned - Improving Sentiment Analysis and Stance Detection Using Large Language Models*, replicating the paper's analysis. Underlying data for this project can be found in associated Harvard Dataverse repository, [Stay Tuned](https://dataverse.harvard.edu/dataverse/stay-tuned), and a copy of the computing enivornment can be found as a [docker image](https://hub.docker.com/repository/docker/mgriswol/stay-tuned/general).
 
 ## Overview
 
-In *Stay Tuned! - Improving Sentiment Analysis and Stance Detection Using Large Language Models*, we estimated stance scores concerning the targets "Biden" and "Trump" for tweets written between September 20th, 2020 and January 20th, 2021. The study team collected tweets from all serving members of the 116th Congress with Twitter accounts, along with a random subset of tweets from the 1\% Public Use Twitter API. We then estimated stance scores using lexical methods, supervised language models, and large language models. This repository replicates all analysis performed in the academic article, along with reproducing figures, tables, and results found in this paper.
+In *Stay Tuned - Improving Sentiment Analysis and Stance Detection Using Large Language Models*, we estimated stance scores concerning the targets "Biden" and "Trump" for tweets written between September 20th, 2020 and January 20th, 2021. The study team collected tweets from all serving members of the 116th Congress with Twitter accounts, along with a random subset of tweets from the 1\% Public Use Twitter API. We then estimated stance scores using lexical methods, supervised language models, and large language models. This repository replicates all analysis performed in the academic article, along with reproducing figures, tables, and results found in this paper.
 
 ## Dependencies
 
