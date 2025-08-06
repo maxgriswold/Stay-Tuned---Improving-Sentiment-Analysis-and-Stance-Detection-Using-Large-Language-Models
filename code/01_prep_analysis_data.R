@@ -86,7 +86,7 @@ setnames(sens, names(sens), c("loc", "party", "first", "last", "username"))
 pol_names <- rbind(sens, reps)
 
 # Make sure encoding is correct, which removes unexpected symbols from MongoDB
-pol_names[, username := iconv(username, from = "ISO-8859-1", to = "UTF-8")]
+pol_names[, username := stri_trans_general(stri_encode(username, from = "latin1", to = "UTF-8"), "Latin-ASCII")]
 pol_names[, username := gsub("@", "", username)]
 
 df <- join(df, pol_names, by = "username", type = "left")
@@ -99,7 +99,7 @@ df[, bioname := paste(first, last)]
 
 # Convert string encoding to ensure accents are included. Set lower to improve fuzzy
 # match with VoteView
-df[, bioname := iconv(bioname, from = "latin1", to='ASCII//TRANSLIT')]
+df[, bioname := stri_trans_general(stri_encode(bioname, from = "latin1", to = "UTF-8"), "Latin-ASCII")]
 df[, bioname := tolower(bioname)]
 
 # David Cicilline tweets out of two accounts so make sure tweets on the second account are
@@ -123,10 +123,7 @@ lean[bioname %in% c("SANDERS, Bernard", "KING, Angus Stanley, Jr."), party_code 
 lean[, c("last", "first") := tstrsplit(bioname, " ", keep = c(1, 2))]
 lean[, bioname := paste(first, last)]
 lean[, bioname := tolower(gsub(",", "", bioname))]
-
-# Changing the encoding a bit, compared to earlier, since accents are being
-# displayed directly (rather than incorporated as backslash special characters)
-lean[, bioname := iconv(bioname, to = 'ASCII//TRANSLIT')]
+lean[, bioname := tolower(stri_trans_general(stri_encode(bioname, from = "UTF-8", to = "UTF-8"), "Latin-ASCII"))]
 
 lean <- lean[, .(bioname, party_code, nominate_dim1)]
 
@@ -135,7 +132,7 @@ df <- join(df, lean, by = "bioname", type = "left")
 
 # For stragglers, try using only last names:
 df_stragglers <- df[is.na(party_code)]
-df_stragglers[, last := iconv(last, from = "latin1", to='ASCII//TRANSLIT')]
+df_stragglers[, last := stri_trans_general(stri_encode(last, from = "latin1", to = "UTF-8"), "Latin-ASCII")]
 df_stragglers[, last := tolower(last)]
 
 df_stragglers[, `:=`(bioname = NULL, party_code = NULL, nominate_dim1 = NULL)]
