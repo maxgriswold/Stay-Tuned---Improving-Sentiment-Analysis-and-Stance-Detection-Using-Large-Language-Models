@@ -319,7 +319,7 @@ plot_dist <- function(d_name, dd, include_tuned = F){
 }
 
 # For main paper, only plot results for selected samples:
-select_models   <- c("gpt4o", "gpt35", "deberta", "siebert")
+select_models   <- c("gpt4o", "gpt35", "deberta", "siebert", "vader", "nrc")
 select_prompts   <- c("p3", NA)
 select_tune_data <- c("nominate", "handcode")
 
@@ -700,7 +700,7 @@ df_cat    <- do.call(rbind, lapply(df_summary, function(x) rbindlist(x[grep("Cat
 # Fig 2. Mean scores by party and correlation, pol data #
 #########################################################
 
-keep_models <- c("gpt4o", "gpt35", "deberta", "siebert")
+keep_models <- c("gpt4o", "gpt35", "deberta", "siebert", "vader", "nrc")
 
 # For Fig 2, calculate mean estimated score for each model in the politican dataset:
 df_fig2 <- df[data_name == 'pol', .(est_score, model_id, id)]
@@ -785,7 +785,7 @@ dev.off()
 # Fig 3. Correlation, user data, single or both subjects #
 ##########################################################
 
-keep_models <- c("gpt4o", "gpt35", "deberta", "siebert")
+keep_models <- c("gpt4o", "gpt35", "deberta", "siebert", "vader", "nrc")
 
 df_fig3 <- df_cont[model_name %in% keep_models & tuned == F & prompt_name %in% c(NA, "p3") & data_name == 'user_val']
 
