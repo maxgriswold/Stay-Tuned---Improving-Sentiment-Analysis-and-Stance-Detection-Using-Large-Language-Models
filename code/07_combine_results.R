@@ -30,10 +30,6 @@ df_lexical <- rbindlist(lapply(lexical_models, prep_lexical))
 # Pretrained semi-supervised models
 df_semi_pretrained <- fread(sprintf("./%s/zero_shot_results.csv", path))
 
-df_semi_pretrained[, model_name := mapvalues(model_name, 
-                                                 from = sort(unique(df_semi_pretrained$model_name)),
-                                                 to = c("distilbert", "tweetnlp", "siebert", "deberta"))]
-
 df_semi_pretrained[, tuned := F]
 df_semi_pretrained[, tune_data := NA]
 df_semi_pretrained[, prompt_name := NA]

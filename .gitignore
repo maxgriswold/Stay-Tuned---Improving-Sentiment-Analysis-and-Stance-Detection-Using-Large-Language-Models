@@ -26,3 +26,9 @@
 *.gz
 *.out
 *.svg
+zero_shot_results_old.csv
+compare_supervised_results.R
+zero_shot_results_new.csv
+analysis_results_new.csv
+analysis_results_old.csv
+res_8_11/

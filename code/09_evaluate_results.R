@@ -710,8 +710,8 @@ setnames(df_fig2, "V1", "est_mean")
 df_fig2[, subject := str_to_title(subject)]
 
 df_fig2 <- join(df_cont, df_fig2, by = c("model_id", "subject"), type = "right")
-df_fig2 <- dcast(df_fig2, model_name + model_name_long + tuned + tune_data + data_name + prompt_name + subject + r + lower + upper ~ party_code, value.var = c("est_mean"))
 df_fig2 <- df_fig2[tuned == F & prompt_name %in% c(NA, "p3") & model_name %in% keep_models,]
+df_fig2 <- dcast(df_fig2, model_name + model_name_long + tuned + tune_data + data_name + prompt_name + subject + r + lower + upper ~ party_code, value.var = c("est_mean"))
 
 # Get a unique vector of model names, then sort that vector by the highest correlation
 # within the Biden models
@@ -809,7 +809,7 @@ fig_3 <- ggplot(df_fig3, aes(y = model_name_long)) +
                x = "Correlation",
                color = "Number of subjects mentioned") +
           theme_bw() +
-          coord_fixed(ratio = 0.5, xlim = c(-0.5, 1), ylim = c(1, 4)) +
+          coord_fixed(ratio = 0.5, xlim = c(-0.5, 1), ylim = c(1, 6)) +
           scale_x_continuous(breaks = seq(-0.5, 1, 0.5)) +
           scale_color_manual(values = plot_colors) +
           facet_wrap(~subject) +

@@ -76,12 +76,13 @@ ENV PATH="/root/miniconda3/bin:${PATH}"
 # Set up conda environment and install pytorch
 RUN conda init
 RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main --channel https://repo.anaconda.com/pkgs/r
+RUN conda install notebook jupyter ipywidgets 
 RUN conda create -y -n stay_tuned python=3.10
 
 RUN conda run -n stay_tuned pip install torch==2.7.0+cu118 xformers --index-url https://download.pytorch.org/whl/cu118
 
 # Install remaining packages.
-RUN conda run -n stay_tuned pip install pandas scipy scikit-learn notebook jupyter ipywidgets accelerate transformers 
+RUN conda run -n stay_tuned pip install pandas scipy scikit-learn accelerate transformers 
 
 # Create working directory
 WORKDIR /work
